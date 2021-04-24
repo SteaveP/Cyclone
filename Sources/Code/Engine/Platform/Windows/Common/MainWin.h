@@ -5,7 +5,7 @@
 #include "Engine/Startup/PlatformIndependentMain.h"
 
 #include "CommonWin.h"
-#include "PlatformFactoryWin.h"
+#include "Engine/Platform/Windows/PlatformWin.h"
 
 int APIENTRY wWinMain(
     _In_ HINSTANCE hInstance,

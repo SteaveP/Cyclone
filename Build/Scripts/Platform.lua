@@ -11,10 +11,10 @@ function IncludeCyclonePlatform()
 		SetupDefaultProjectState("PlatformWin", "Library")
 		language "C++"
 
-		files { EnginePath("Platform/Windows/*.h"), EnginePath("Platform/Windows/*.cpp") }
+		files { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
 
 		vpaths {
-			["Windows/*"] = { EnginePath("Platform/Windows/*.h"), EnginePath("Platform/Windows/*.cpp") }
+			["Windows/*"] = { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
 		}
 
 		AddEngineDependency()

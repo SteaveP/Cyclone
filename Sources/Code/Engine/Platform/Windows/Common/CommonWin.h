@@ -14,7 +14,7 @@
 #include <memory>
 
 // This module
-#include "PlatformWinModule.h"
+#include "Engine/Platform/Windows/PlatformWinModule.h"
 
 // Engine
 #include "Engine/Engine.h"

@@ -1,15 +1,17 @@
 #pragma once
 
 #include "PlatformWinModule.h"
-#include "Engine/Framework/IPlatformFactory.h"
+#include "Engine/Framework/IPlatform.h"
 
 namespace Cyclone
 {
 
-class PLATFORMWIN_API PlatformFactoryWin : public IPlatformFactory
+class PLATFORMWIN_API PlatformWin : public IPlatform
 {
 public:
     virtual WindowPtr CreateWindowPtr() override;
+
+    virtual void ChangeWorkingDirectory(std::string_view path) override;
 };
 
 PLATFORMWIN_API void GInitPlatformFactoryWin();

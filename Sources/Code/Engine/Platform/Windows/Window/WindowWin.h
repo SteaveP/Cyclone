@@ -2,7 +2,7 @@
 
 #include "Engine/Framework/IWindow.h"
 
-#include "CommonWin.h"
+#include "../Common/CommonWin.h"
 
 namespace Cyclone
 {

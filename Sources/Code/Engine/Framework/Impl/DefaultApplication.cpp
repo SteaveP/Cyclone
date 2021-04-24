@@ -1,6 +1,6 @@
 #include "DefaultApplication.h"
 
-#include "Engine/Framework/IPlatformFactory.h"
+#include "Engine/Framework/IPlatform.h"
 #include "Engine/Framework/IRendererFactory.h"
 #include "Engine/Framework/IRenderer.h"
 #include "Engine/Framework/ISceneRenderer.h"
@@ -10,15 +10,8 @@
 
 //#include "Engine/Utils/Timestamp.h"
 
-#include <direct.h> // #todo_fixme
-
 namespace Cyclone
 {
-
-void changeDirectory(std::string_view path) // #todo_fixme
-{
-    chdir(path.data());
-}
 
 DefaultApplication::DefaultApplication()
     : m_isInit(false)
@@ -37,9 +30,9 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
 
     // assume that app is run from <RootDir>/Bin to load binary dependencies (.dlls)
     // after that, need to change directory to <RootDir> to be able to reference assets and other project's files
-    changeDirectory("..");
+    GEngineGetCurrentPlatform()->ChangeWorkingDirectory("..");
 
-    m_window = GEngineGetPlatformFactory()->CreateWindowPtr();
+    m_window = GEngineGetCurrentPlatform()->CreateWindowPtr();
 
     if (/*m_renderer == nullptr || */m_window == nullptr)
         return C_STATUS::C_STATUS_INVALID_ARG;

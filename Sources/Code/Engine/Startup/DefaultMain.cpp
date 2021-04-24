@@ -7,7 +7,7 @@
 
 #ifdef GENERATE_MAIN_FUNCTION
 #ifdef PLATFORM_WIN64
-#include "Engine/Platform/Windows/MainWin.h"
+#include "Engine/Platform/Windows/Common/MainWin.h"
 #else
 int main(int argc, char* argv[])
 {
