@@ -16,6 +16,7 @@ namespace Cyclone
 DefaultApplication::DefaultApplication()
     : m_isInit(false)
     , m_dt(0.0)
+    , m_platform(nullptr)
 {
 }
 
@@ -28,19 +29,40 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
 {
     m_isInit = true;
 
-    // assume that app is run from <RootDir>/Bin to load binary dependencies (.dlls)
-    // after that, need to change directory to <RootDir> to be able to reference assets and other project's files
-    GEngineGetCurrentPlatform()->ChangeWorkingDirectory("..");
+    m_platform = desc.Platform;
+    m_renderer = desc.Renderer;
+    m_inputManager = desc.InputManager;
 
-    m_window = GEngineGetCurrentPlatform()->CreateWindowPtr();
+    if (m_platform == nullptr)
+    {
+        CASSERT(m_platform);
+        return C_STATUS::C_STATUS_INVALID_ARG;
+    }
 
-    if (/*m_renderer == nullptr || */m_window == nullptr)
+    // Executable runs from from <RootDir>/Bin to load binary dependencies (.dlls) from that folder
+    // After that, need to change directory to <RootDir> to be able to reference assets and other project's files
+    m_platform->ChangeWorkingDirectory("..");
+
+    m_window = m_platform->CreateWindowPtr();
+
+    if (m_renderer == nullptr || m_window == nullptr)
         return C_STATUS::C_STATUS_INVALID_ARG;
 
     // #todo parse command line
 
+    if (m_renderer)
     {
-        m_inputManager = std::make_unique<DefaultInputManager>();
+        RendererDesc rendererDesc = RendererDesc()
+            .SetApplication(this)
+            .SetWindow(m_window.get())
+            .SetFrameCount(2);
+
+        C_STATUS result = m_renderer->Init(&rendererDesc);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    }
+
+    if (m_inputManager)
+    {
         C_STATUS result = m_inputManager->Init(this);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
     }

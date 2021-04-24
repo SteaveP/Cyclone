@@ -1,4 +1,4 @@
-#include "IRenderBackend.h"
+#include "IRendererBackend.h"
 
 #include "Engine/Core/Helpers.h"
 
@@ -8,16 +8,16 @@ namespace Cyclone
 namespace Render
 {
 
-static IRenderBackend* GCurrentRenderBackend = nullptr;
+static IRendererBackend* GCurrentRenderBackend = nullptr;
 
 } // namespace Render
 
-ENGINE_API Render::IRenderBackend* GEngineGetCurrentRenderBackend()
+ENGINE_API Render::IRendererBackend* GEngineGetCurrentRenderBackend()
 {
     return Render::GCurrentRenderBackend;
 }
 
-ENGINE_API void GEngineSetCurrentRenderBackend(Render::IRenderBackend* RenderBackend)
+ENGINE_API void GEngineSetCurrentRenderBackend(Render::IRendererBackend* RenderBackend)
 {
     CASSERT(Render::GCurrentRenderBackend == nullptr);
     Render::GCurrentRenderBackend = RenderBackend;

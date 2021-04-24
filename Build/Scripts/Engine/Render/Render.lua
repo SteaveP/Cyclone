@@ -31,6 +31,7 @@ end
 function IncludeEngineRenderPlatformVulkan()
 	local BackendName = "Vulkan";
 
+	-- #todo also add min version checking
 	if GetVulkanSDKPath() == "" then
 		print("Vulkan SDK not found! Vulkan Backend will not be generated")
 		return

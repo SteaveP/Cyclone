@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Framework/IModule.h"
 #include "Engine/Core/Helpers.h"
 
 #ifdef DYNAMIC_LIB
@@ -12,3 +13,15 @@
 	#define PLATFORMWIN_API
 	#define PLATFORMWIN_API
 #endif
+
+namespace Cyclone
+{
+
+class PLATFORMWIN_API PlatformWinModule : public IModule
+{
+public:
+    virtual C_STATUS OnRegister() override;
+    virtual C_STATUS OnUnRegister() override;
+};
+
+} // namespace Cyclone

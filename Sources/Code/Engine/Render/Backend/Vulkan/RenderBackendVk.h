@@ -1,27 +1,16 @@
 #pragma once
 
-#include "Engine/Framework/IModule.h"
-#include "Engine/Render/IRenderBackend.h"
+#include "Engine/Render/IRendererBackend.h"
 #include "RenderBackendVkModule.h"
 
-namespace Cyclone
+namespace Cyclone::Render
 {
 
-namespace Render
-{
-
-class RENDER_BACKEND_VK_API RenderBackendVulkan : public IRenderBackend
-{
-    public:
-};
-
-} // namespace Render
-
-class RENDER_BACKEND_VK_API RenderBackendVulkanModule : public IModule
+class RENDER_BACKEND_VK_API RenderBackendVulkan : public IRendererBackend
 {
 public:
-    virtual C_STATUS OnRegister() override;
-    virtual C_STATUS OnUnRegister() override;
+
+    virtual C_STATUS Render() override;
 };
 
-} // namespace Cyclone
+} // namespace Cyclone::Render

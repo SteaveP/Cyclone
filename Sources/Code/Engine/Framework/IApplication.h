@@ -3,8 +3,9 @@
 namespace Cyclone
 {
 
-class IWindow;
+class IPlatform;
 class IRenderer;
+class IWindow;
 class IInputManager;
 class IInputHandler;
 
@@ -15,6 +16,7 @@ public:
 
     virtual int Run() = 0;
 
+    virtual IPlatform* GetPlatform() = 0;
     virtual IWindow* GetWindow() = 0;
     virtual IRenderer* GetRenderer() = 0;
 

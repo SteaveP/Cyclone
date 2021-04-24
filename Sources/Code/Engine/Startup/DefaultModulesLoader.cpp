@@ -6,11 +6,11 @@
 // #todo temporal workaround for modules loading
 
 #if PLATFORM_WIN64
-#include "Engine/Platform/Windows/PlatformWin.h"
+#include "Engine/Platform/Windows/PlatformWinModule.h"
 #endif
 
 #if RENDER_BACKEND_VULKAN
-#include "Engine/Render/Backend/Vulkan/RenderBackendVk.h"
+#include "Engine/Render/Backend/Vulkan/RenderBackendVkModule.h"
 #endif
 
 Cyclone::MainEntryCallback MainCallback = [](int argc, char* argv[], void* PlatformDataPtr)
