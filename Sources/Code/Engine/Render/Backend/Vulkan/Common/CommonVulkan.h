@@ -32,3 +32,5 @@
 #include <chrono>
 
 #include "../RenderBackendVkModule.h"
+
+#define C_ASSERT_VK_SUCCEEDED(x) CASSERT((x) == VkResult::VK_SUCCESS)

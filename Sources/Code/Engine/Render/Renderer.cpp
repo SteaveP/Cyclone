@@ -7,6 +7,9 @@ C_STATUS Renderer::Init(const RendererDesc* desc)
 {
     CASSERT(m_rendererBackend);
 
+    m_app = desc->App;
+    m_window = desc->Window;
+
     if (m_rendererBackend)
     {
         C_STATUS result = m_rendererBackend->Init(this);

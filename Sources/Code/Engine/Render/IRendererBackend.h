@@ -5,10 +5,10 @@
 namespace Cyclone
 {
 
+class IRenderer;
+
 namespace Render
 {
-
-class Renderer;
 
 class ENGINE_API IRendererBackend
 {

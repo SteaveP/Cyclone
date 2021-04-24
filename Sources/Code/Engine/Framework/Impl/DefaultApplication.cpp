@@ -50,6 +50,25 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
 
     // #todo parse command line
 
+    if (m_inputManager)
+    {
+        C_STATUS result = m_inputManager->Init(this);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    }
+
+    // initialize window
+    if (m_window)
+    {
+        WindowParams windowParams{};
+        windowParams.app = this;
+        windowParams.width = 1920;
+        windowParams.height = 1080;
+        windowParams.title = desc.WindowCaption.empty() ? "Cyclone's Sample" : desc.WindowCaption;
+
+        C_STATUS result = m_window->Init(&windowParams);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    }
+
     if (m_renderer)
     {
         RendererDesc rendererDesc = RendererDesc()
@@ -61,23 +80,6 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
     }
 
-    if (m_inputManager)
-    {
-        C_STATUS result = m_inputManager->Init(this);
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
-    }
-
-    // initialize window
-    {
-        WindowParams windowParams{};
-        windowParams.app = this;
-        windowParams.width = 1920;
-        windowParams.height = 1080;
-        windowParams.title = desc.WindowCaption.empty() ? "Cyclone's Sample" : desc.WindowCaption;
-
-        C_STATUS result = m_window->Init(&windowParams);
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
-    }
 
     {
         C_STATUS result = OnInit();
