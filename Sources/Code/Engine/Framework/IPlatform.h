@@ -17,7 +17,7 @@ public:
 };
 
 ENGINE_API IPlatform* GEngineGetCurrentPlatform();
-ENGINE_API void GEngineSetCurrentPlatform(IPlatform* PlatformFactory);
+ENGINE_API void GEngineSetCurrentPlatform(IPlatform* Platform);
 
 
 } // namespace Cyclone

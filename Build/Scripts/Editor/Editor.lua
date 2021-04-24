@@ -1,4 +1,5 @@
-include "Platform.lua"
+include "../Engine/Platform.lua"
+include "../Engine/Render/Render.lua"
 
 function IncludeEditor()
     
@@ -10,7 +11,6 @@ function IncludeEditor()
 	    SetupDefaultProjectState("Editor", "WindowedApp")
 
         AddEngineDependency()
-		AddPlatformsDependency()
 
         files {EditorPath("**.h"), EditorPath("**.cpp")}
 
@@ -21,7 +21,7 @@ function IncludeEditor()
 		}
 
 		filter { 'platforms:Win*' }
-			files { BuildPath('Scripts/Editor.rc'), SourcesPath('Assets/Textures/Icons/EditorIcon.ico') }
-			vpaths { ['Resources/*'] = { '*.rc', SourcesPath('**.ico') } }
+			files { BuildPath('Scripts/Editor/Editor.rc'), SourcesPath('Assets/Textures/Icons/EditorIcon.ico') }
+			vpaths { ['Resources/*'] = { '**.rc', SourcesPath('**.ico') } }
 		filter {}
 end

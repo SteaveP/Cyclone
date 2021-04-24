@@ -5,23 +5,25 @@
 namespace Cyclone
 {
 
-int PlatformIndependentMain(int argc, char* argv[])
+int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback)
 {
-    // #todo_fixme
+    if (EntryCallback)
+    {
+        EntryCallback(argc, argv, PlatformDataPtr);
+    }
+
     DefaultApplicationParams params{};
-    //params.hInstance = hInstance;
-    //params.lpCmdLine = lpCmdLine;
-    //params.nCmdShow = nCmdShow;
-    params.windowCaption = "Borealis: Editor";
+    params.PlatformDataPtr = PlatformDataPtr;
+    params.WindowCaption = "Borealis: Editor";
 
     DefaultApplication app{};
+
     if (app.Init(params) == C_STATUS::C_STATUS_OK)
     {
         return app.Run();
     }
 
-
-    return 0;
+    return -1;
 }
 
 } // namespace Cyclone

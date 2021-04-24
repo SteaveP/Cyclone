@@ -51,7 +51,7 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
         windowParams.app = this;
         windowParams.width = 1920;
         windowParams.height = 1080;
-        windowParams.title = desc.windowCaption.empty() ? "Cyclone's Sample" : desc.windowCaption;
+        windowParams.title = desc.WindowCaption.empty() ? "Cyclone's Sample" : desc.WindowCaption;
 
         C_STATUS result = m_window->Init(&windowParams);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);

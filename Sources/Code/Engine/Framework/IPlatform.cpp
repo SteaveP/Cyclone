@@ -12,10 +12,10 @@ IPlatform* GEngineGetCurrentPlatform()
     return GCurrentPlatform;
 }
 
-void GEngineSetCurrentPlatform(IPlatform* PlatformFactory)
+void GEngineSetCurrentPlatform(IPlatform* Platform)
 {
     CASSERT(GCurrentPlatform == nullptr);
-    GCurrentPlatform = PlatformFactory;
+    GCurrentPlatform = Platform;
 }
 
 } // namespace Cyclone

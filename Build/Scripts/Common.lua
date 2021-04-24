@@ -112,10 +112,10 @@ function SetupDefaultWorkspaceState()
         targetsuffix "_P"
 
     filter { "platforms:*DX12"}
-        defines { "RHI_DX12" }
+        defines { "RENDER_BACKEND_DX12" }
         
     filter { "platforms:*Vulkan"}
-        defines { "RHI_VULKAN" }
+        defines { "RENDER_BACKEND_VULKAN" }
     
 	-- filter "system:windows"
     --     links       { "ole32", "ws2_32", "advapi32", "version" }

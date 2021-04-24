@@ -2,6 +2,7 @@
 
 #include "PlatformWinModule.h"
 #include "Engine/Framework/IPlatform.h"
+#include "Engine/Framework/IModule.h"
 
 namespace Cyclone
 {
@@ -14,6 +15,11 @@ public:
     virtual void ChangeWorkingDirectory(std::string_view path) override;
 };
 
-PLATFORMWIN_API void GInitPlatformFactoryWin();
+class PLATFORMWIN_API PlatformWinModule : public IModule
+{
+public:
+    virtual C_STATUS OnRegister() override;
+    virtual C_STATUS OnUnRegister() override;
+};
 
 } // namespace Cyclone

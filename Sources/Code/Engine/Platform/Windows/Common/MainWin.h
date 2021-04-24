@@ -3,9 +3,13 @@
 // this file defines entry point for windows platform
 
 #include "Engine/Startup/PlatformIndependentMain.h"
-
 #include "CommonWin.h"
-#include "Engine/Platform/Windows/PlatformWin.h"
+
+struct PlatformData
+{
+    HINSTANCE hInstance;
+    int nCmdShow;
+};
 
 int APIENTRY wWinMain(
     _In_ HINSTANCE hInstance,
@@ -17,14 +21,21 @@ int APIENTRY wWinMain(
 
     int argc = 0;
 
-    Cyclone::GInitPlatformFactoryWin();
-
     // #todo_win
     //char* argv = CommandLineToArgvW(lpCmdLine, &argc);
-
     char* argv[] = { 0 };
-    int result = Cyclone::PlatformIndependentMain(argc, argv);
 
+    PlatformData Data
+    {
+        hInstance,
+        nCmdShow
+    };
+
+    // MainCallback should be included before including this file in the caller
+    int result = Cyclone::PlatformIndependentMain(argc, argv, &Data, MainCallback);
+
+    // #todo_win
     //LocalFree(argv);
+    
     return result;
 }

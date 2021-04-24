@@ -10,7 +10,8 @@ class DefaultInputManager;
 
 struct DefaultApplicationParams
 {
-    std::string windowCaption;
+    void* PlatformDataPtr;
+    std::string WindowCaption;
 };
 
 class DefaultApplication : public IApplication
