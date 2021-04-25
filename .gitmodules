@@ -1,3 +1,18 @@
 [submodule "Sources/ThirdParty/ImGuiFileDialog"]
 	path = Sources/ThirdParty/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
+[submodule "Sources/ThirdParty/Lyra"]
+	path = Sources/ThirdParty/Lyra
+	url = https://github.com/bfgroup/Lyra.git
+[submodule "Sources/ThirdParty/microprofile"]
+	path = Sources/ThirdParty/microprofile
+	url = https://github.com/jonasmr/microprofile
+[submodule "Sources/ThirdParty/entt"]
+	path = Sources/ThirdParty/entt
+	url = https://github.com/skypjack/entt.git
+[submodule "Sources/ThirdParty/VulkanMemoryAllocator"]
+	path = Sources/ThirdParty/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator"]
+	path = Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
