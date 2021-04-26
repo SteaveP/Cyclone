@@ -51,39 +51,34 @@ function IncludeEngineRenderPlatformVulkan()
 				["Code/*"] = {EnginePath("Render/Backend/Vulkan/**")},
 			}
 
+			includedirs { EnginePath("Render/Backend/Vulkan") }
 			includedirs { RelativeVulkanSDKPath("Include") }
 			libdirs { RelativeVulkanSDKPath("Lib") }
 			links { "vulkan-1" }
 
 			AddEngineDependencyInternal()
-	
-		PushGroup "Utils"
-			project "VulkanMemoryAllocator"
-				SetupDefaultProjectState("VkMemoryAllocator", "StaticLib") -- #todo should always be StaticLib?
-				SetupRenderBackendProject(BackendName)
 
-				files {
-					-- Thirdparty
-					SourcesPath("Thirdparty/Render/BackendVulkan/VulkanMemoryAllocator/src/vk_mem_alloc.h"),
-					--SourcesPath("Thirdparty/Render/Vulkan/VulkanMemoryAllocator/src/vk_mem_alloc.natvis"),
-					
-					-- ThirdpartyIntegration
-					SourcesPath("ThirdpartyIntegration/Render/BackendVulkan/VulkanMemoryAllocator/**.h"),
-					SourcesPath("ThirdpartyIntegration/Render/BackendVulkan/VulkanMemoryAllocator/**.cpp"),
-				}
+			-- ImGui Renderer
+			IncludeImGuiReference()
+			files {
+				SourcesPath("ThirdParty/ImGui/backends/imgui_impl_vulkan.h"),
+				SourcesPath("ThirdParty/ImGui/backends/imgui_impl_vulkan.cpp")
+			}
+			
+			filter { "toolset:msc*" }
+				files { SourcesPath("ThirdParty/ImGui/misc/natvis/*.natvis")}
+			filter {}
 
-				includedirs { RelativeVulkanSDKPath("Include") }
-				includedirs { SourcesPath("Thirdparty/Render/BackendVulkan/VulkanMemoryAllocator/src/") }
-				
-				filter { "toolset:msvc*" }
-					files { SourcesPath("Thirdparty/Render/BackendVulkan/VulkanMemoryAllocator/src/**.natvis")}
-				filter {}
-
-				vpaths {
-					["Thirdparty/*"] = { SourcesPath("Thirdparty/Render/BackendVulkan/VulkanMemoryAllocator/src/**") },
-					["*"] = { SourcesPath("ThirdpartyIntegration/Render/BackendVulkan/VulkanMemoryAllocator/**") },
-				}
-		PopGroup()
+			vpaths { ["Code/UI/ImGui/*"] = { SourcesPath("ThirdParty/ImGui**") } }
+			
+			-- Vulkan Memory Allocator
+			files { SourcesPath("ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator/include/vk_mem_alloc.h") }
+			filter { "toolset:msc*" }
+				files { SourcesPath("ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator/src/**.natvis")}
+			filter {}			
+			includedirs { SourcesPath("ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator/include/") }
+			
+			vpaths { ["Code/MemoryAllocator/ThirdParty/*"] = { SourcesPath("ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator/**") } }
 	PopGroup()
 end
 

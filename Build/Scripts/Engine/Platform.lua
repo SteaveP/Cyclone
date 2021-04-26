@@ -17,5 +17,18 @@ function IncludeEnginePlatforms()
 			["Windows/*"] = { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
 		}
 
+		-- ImGui platform integration
+		IncludeImGuiReference()
+		files {
+			SourcesPath("ThirdParty/ImGui/backends/imgui_impl_win32.h"),
+			SourcesPath("ThirdParty/ImGui/backends/imgui_impl_win32.cpp")
+		}
+		
+		filter { "toolset:msc*" }
+			files { SourcesPath("ThirdParty/ImGui/misc/natvis/*.natvis")}
+		filter {}
+
+		vpaths { ["Code/UI/ImGui/*"] = { SourcesPath("ThirdParty/ImGui**") } }
+		
 		AddEngineDependencyInternal()
 end
