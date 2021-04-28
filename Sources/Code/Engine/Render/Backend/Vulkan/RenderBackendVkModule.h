@@ -11,7 +11,6 @@
 	#endif
 #else
 	#define RENDER_BACKEND_VK_API
-	#define RENDER_BACKEND_VK_API
 #endif
 
 namespace Cyclone
