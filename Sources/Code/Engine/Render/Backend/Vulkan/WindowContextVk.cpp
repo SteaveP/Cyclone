@@ -496,24 +496,24 @@ C_STATUS WindowContextVk::createSyncObjects()
     m_inflightFences.resize(MAX_FRAMES_IN_FLIGHT);
     m_imagesInFlight.resize(m_swapchainImages.size(), VK_NULL_HANDLE);
 
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    VkSemaphoreCreateInfo SemaphoreInfo{};
+    SemaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    VkFenceCreateInfo FenceInfo{};
+    FenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    FenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     VkResult result;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        result = vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailabeSemaphores[i]);
+        result = vkCreateSemaphore(m_device, &SemaphoreInfo, nullptr, &m_imageAvailabeSemaphores[i]);
         C_ASSERT_VK_SUCCEEDED(result);
 
-        result = vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]);
+        result = vkCreateSemaphore(m_device, &SemaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]);
         C_ASSERT_VK_SUCCEEDED(result);
 
-        result = vkCreateFence(m_device, &fenceInfo, nullptr, &m_inflightFences[i]);
+        result = vkCreateFence(m_device, &FenceInfo, nullptr, &m_inflightFences[i]);
         C_ASSERT_VK_SUCCEEDED(result);
     }
 
@@ -523,6 +523,8 @@ C_STATUS WindowContextVk::createSyncObjects()
 C_STATUS WindowContextVk::BeginRender()
 {
     vkWaitForFences(m_device, 1, &m_inflightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+
+    CheckCommandLists();
 
     VkResult result = vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_imageAvailabeSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex);
 
@@ -546,38 +548,64 @@ C_STATUS WindowContextVk::BeginRender()
     return C_STATUS::C_STATUS_OK;
 }
 
-C_STATUS WindowContextVk::Present()
+C_STATUS WindowContextVk::Present(VkSemaphore RenderFinishedSemaphore)
 {
-    VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[m_currentFrame] };
+    // #todo_vk
+    std::array<VkSemaphore, 20> WaitSemaphores;
+    uint32_t WaitSemaphoresCount = 0;
 
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+    auto* GraphicsQueue = GetCommandQueue(CommandQueueType::Graphics);
+    CASSERT(GraphicsQueue);
 
-    VkSwapchainKHR swapchains[] = { m_swapchain };
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapchains;
-    presentInfo.pImageIndices = &m_currentImageIndex;
-    presentInfo.pResults = nullptr; // optional
+    for (uint32_t i = 0; i < GraphicsQueue->m_submittedCommandBuffers.size(); ++i)
+    {
+        if (GraphicsQueue->m_submittedCommandBuffers[i]->GetCompletedSemaphore() != VK_NULL_HANDLE)
+        {
+            WaitSemaphores[WaitSemaphoresCount] = GraphicsQueue->m_submittedCommandBuffers[i]->GetCompletedSemaphore();
+            WaitSemaphoresCount++;
+        }
+    }
+
+    if (RenderFinishedSemaphore != VK_NULL_HANDLE)
+    {
+        WaitSemaphores[WaitSemaphoresCount] = RenderFinishedSemaphore;
+        WaitSemaphoresCount++;
+    }
+
+    VkPresentInfoKHR PresentInfo{};
+    PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    PresentInfo.waitSemaphoreCount = WaitSemaphoresCount;
+    PresentInfo.pWaitSemaphores = WaitSemaphores.data();
+
+    VkSwapchainKHR Swapchains[] = { m_swapchain };
+    PresentInfo.swapchainCount = 1;
+    PresentInfo.pSwapchains = Swapchains;
+    PresentInfo.pImageIndices = &m_currentImageIndex;
+    PresentInfo.pResults = nullptr; // optional
 
     auto* PresentQueue = GetCommandQueue(CommandQueueType::Present);
     CASSERT(PresentQueue);
 
-    VkResult result = vkQueuePresentKHR(PresentQueue->GetQueue(), &presentInfo);
+    VkResult Result = vkQueuePresentKHR(PresentQueue->GetQueue(), &PresentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized)
+    if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR || m_framebufferResized)
     {
         m_framebufferResized = false;
         recreateSwapchain();
     }
     else
     {
-        C_ASSERT_VK_SUCCEEDED(result);
+        C_ASSERT_VK_SUCCEEDED(Result);
     }
 
+    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
     return C_STATUS::C_STATUS_OK;
+}
+
+void WindowContextVk::CheckCommandLists()
+{
+    GetCommandQueue(CommandQueueType::Graphics)->OnBeginFrame();
 }
 
 WindowContextVk::WindowContextVk() = default;

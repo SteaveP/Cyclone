@@ -38,7 +38,7 @@ public:
     C_STATUS Shutdown();
 
     C_STATUS BeginRender();
-    C_STATUS Present();
+    C_STATUS Present(VkSemaphore RenderFinishedSemaphore);
 
     RenderBackendVulkan* GetBackend() const { return m_backend; }
     IWindow* GetWindow() const { return m_window; }
@@ -49,6 +49,8 @@ public:
     CommandQueueVk* GetCommandQueue(CommandQueueType QueueType) { return m_commandQueues[(uint32_t)QueueType].get(); }
 
 protected:
+    void CheckCommandLists();
+
     C_STATUS pickPhysicalDevice();
     bool isDeviceSuitable(VkPhysicalDevice device);
 
@@ -104,6 +106,7 @@ public:
     size_t m_currentFrame = 0;
     uint32_t m_currentImageIndex = 0;
 
+    VkSampleCountFlagBits m_currentMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
     VkSampleCountFlagBits m_maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
 
