@@ -5,7 +5,7 @@
 #include "Engine/Framework/IInputhandler.h"
 #include "Engine/Framework/IRenderer.h"
 
-//#include "Engine/UI/UIRenderer.h"
+#include "Engine/Framework/IPlatform.h"
 
 #include <ShellScalingAPI.h>
 
@@ -84,18 +84,17 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
 
     if (window && window->GetApp())
     {
-        Cyclone::IRenderer* renderer = window->GetApp()->GetRenderer();
-        if (renderer && renderer->GetUIRenderer())
+        IPlatform* Platform = window->GetApp()->GetPlatform();
+        if (Platform)
         {
-            // #todo_fixme
-            //Cyclone:: WindowMessageParam params = {};
-            //params.param1 = (void*)hWnd;
-            //params.param2 = (void*)(uint64)message;
-            //params.param3 = (void*)wParam;
-            //params.param4 = (void*)lParam;
-            //LRESULT result = renderer->GetUIRenderer()->OnWindowMessage(std::move(params));
-            //if (result)
-            //    return 0;
+            WindowMessageParamWin Params = {};
+            Params.hWnd = hWnd;
+            Params.message = message;
+            Params.wParam = wParam;
+            Params.lParam = lParam;
+
+            if (Platform->OnWindowMessage(window, &Params) == C_STATUS::C_STATUS_OK)
+                return 0;
         }
     }
 
@@ -428,16 +427,9 @@ void WindowWinApi::OnDPIChanged(float newDPI, float oldDPI)
 {
     m_dpi = newDPI;
 
-    if (GetApp())
+    if (GetApp() && GetApp()->GetPlatform())
     {
-        GetApp()->OnDPIChanged(newDPI, oldDPI);
-
-        Cyclone::IRenderer* renderer = GetApp()->GetRenderer();
-        if (renderer && renderer->GetUIRenderer())
-        {
-            // #todo_fixme
-            //renderer->GetUIRenderer()->OnDPIChange(newDPI, oldDPI);
-        }
+        GetApp()->GetPlatform()->OnDPIChanged(newDPI, oldDPI);
     }    
 }
 

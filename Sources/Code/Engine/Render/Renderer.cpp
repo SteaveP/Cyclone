@@ -26,7 +26,23 @@ void Renderer::Deinit()
 
 C_STATUS Renderer::BeginFrame()
 {
-        
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS Renderer::EndFrame()
+{
+    return C_STATUS::C_STATUS_OK;
+}
+
+
+C_STATUS Renderer::BeginRender()
+{
+    if (m_rendererBackend)
+    {
+        C_STATUS result = m_rendererBackend->BeginRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    }
+
     return C_STATUS::C_STATUS_OK;
 }
 
@@ -35,6 +51,17 @@ C_STATUS Renderer::Render()
     if (m_rendererBackend)
     {
         C_STATUS result = m_rendererBackend->Render();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    }
+
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS Renderer::EndRender()
+{
+    if (m_rendererBackend)
+    {
+        C_STATUS result = m_rendererBackend->EndRender();
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
     }
 
@@ -62,13 +89,7 @@ ISceneRenderer* Renderer::GetSceneRenderer() const
     return nullptr;
 }
 
-UIRenderer* Renderer::GetUIRenderer() const
-{
-        
-    return nullptr;
-}
-
-C_STATUS Renderer::InitConcrete(IRendererBackend* RendererBackend)
+C_STATUS Renderer::PreInit(IRendererBackend* RendererBackend)
 {
     m_rendererBackend = RendererBackend;
     return C_STATUS::C_STATUS_OK;

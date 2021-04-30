@@ -5,10 +5,9 @@
 #include "Engine/Framework/IRenderer.h"
 #include "Engine/Framework/ISceneRenderer.h"
 #include "Engine/Framework/IInputHandler.h"
+#include "Engine/Framework/IUIModule.h"
 
-#include "engine/Framework/Impl/DefaultInputManager.h"
-
-//#include "Engine/Utils/Timestamp.h"
+#include "Engine/Framework/Impl/DefaultInputManager.h"
 
 namespace Cyclone
 {
@@ -32,6 +31,7 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
     m_platform = desc.Platform;
     m_renderer = desc.Renderer;
     m_inputManager = desc.InputManager;
+    m_ui = desc.UIModule;
 
     if (m_platform == nullptr)
     {
@@ -52,21 +52,21 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
 
     if (m_inputManager)
     {
-        C_STATUS result = m_inputManager->Init(this);
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        C_STATUS Result = m_inputManager->Init(this);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     // initialize window
     if (m_window)
     {
-        WindowParams windowParams{};
-        windowParams.app = this;
-        windowParams.width = 1920;
-        windowParams.height = 1080;
-        windowParams.title = desc.WindowCaption.empty() ? "Cyclone's Sample" : desc.WindowCaption;
+        WindowParams WindowParams{};
+        WindowParams.app = this;
+        WindowParams.width = 1920;
+        WindowParams.height = 1080;
+        WindowParams.title = desc.WindowCaption.empty() ? "Cyclone's Sample" : desc.WindowCaption;
 
-        C_STATUS result = m_window->Init(&windowParams);
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        C_STATUS Result = m_window->Init(&WindowParams);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     if (m_renderer)
@@ -76,14 +76,19 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& desc)
             .SetWindow(m_window.get())
             .SetFrameCount(2);
 
-        C_STATUS result = m_renderer->Init(&rendererDesc);
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        C_STATUS Result = m_renderer->Init(&rendererDesc);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
+    if (m_ui)
+    {
+        C_STATUS Result = m_ui->Init(this);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
 
     {
-        C_STATUS result = OnInit();
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        C_STATUS Result = OnInit();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -96,6 +101,12 @@ void DefaultApplication::DeInit()
 
     WaitAllPendingJobs();
 
+    if (m_ui)
+    {
+        m_ui->Shutdown();
+        m_ui = nullptr;
+    }
+
     if (m_renderer)
     {
         m_renderer->SetSceneRenderer(nullptr);
@@ -106,6 +117,8 @@ void DefaultApplication::DeInit()
     {
         m_window.reset();
     }
+
+    m_platform = nullptr;
 
     m_isInit = false;
 }
@@ -119,27 +132,20 @@ int DefaultApplication::Run()
         double Seconds() { return 0; }
     };
 
-    HQTimeSample timestamp;
-    timestamp.Start();
+    HQTimeSample Timestamp;
+    Timestamp.Start();
 
-    int ret = 0;
-    while (true)
+    bool NeedToExit = false;
+    while (!NeedToExit)
     {
-        timestamp.Stop();
-        m_dt = timestamp.Seconds();
-        timestamp.Start();
+        Timestamp.Stop();
+        m_dt = Timestamp.Seconds();
+        Timestamp.Start();
 
-        bool needToExit = false;
-
-        needToExit = Update() != C_STATUS::C_STATUS_OK;
-
-        if (needToExit)
-        {
-            break;
-        }
+        NeedToExit = Frame() != C_STATUS::C_STATUS_OK;
     }
 
-    return ret;
+    return 0;
 }
 
 IInputHandler* DefaultApplication::GetInputHandler()
@@ -163,30 +169,60 @@ void DefaultApplication::WaitAllPendingJobs()
         m_renderer->WaitGPU();
 }
 
-C_STATUS DefaultApplication::Update()
+C_STATUS DefaultApplication::Frame()
+{
+    C_STATUS Result = BeginFrame();
+    if (Result == C_STATUS::C_STATUS_SHOULD_EXIT)
+        return Result;
+    else
+    {
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
+
+    Result = Update();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+    Result = Render();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+    Result = EndFrame();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS DefaultApplication::BeginFrame()
 {
     // update window's message queues
     if (m_window && m_window->UpdateMessageQueue() == false)
     {
-        return C_STATUS::C_STATUS_INVALID_ARG;
+        return C_STATUS::C_STATUS_SHOULD_EXIT;
     }
 
+    if (m_renderer)
+    {
+        C_STATUS Result = m_renderer->BeginFrame();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
+
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS DefaultApplication::Update()
+{
     if (m_window)
     {
         m_window->OnFrame();
     }
 
-    // handle input
     if (m_inputManager)
     {
         m_inputManager->OnFrame();
     }
 
-    if (m_renderer)
+    if (m_ui)
     {
-        // #todo_gfx move rendering into separate thread?
-        C_STATUS result = m_renderer->BeginFrame();
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        m_ui->OnFrame();
     }
 
     // custom update callback
@@ -201,16 +237,6 @@ C_STATUS DefaultApplication::Update()
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
     }
 
-    if (m_renderer)
-    {
-        // #todo_gfx move rendering into separate thread?
-
-        C_STATUS result = m_renderer->Render();
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
-    }
-
-    // #todo if exit was requested need to call OnFrameAfter() methods?
-
     if (m_window)
     {
         m_window->OnFrameAfter();
@@ -219,19 +245,46 @@ C_STATUS DefaultApplication::Update()
     return C_STATUS::C_STATUS_OK;
 }
 
-Cyclone::C_STATUS DefaultApplication::OnUpdate()
+C_STATUS DefaultApplication::Render()
+{
+    if (m_renderer)
+    {
+        C_STATUS Result = m_renderer->BeginRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+        Result = m_renderer->Render();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+        if (m_ui)
+        {
+            m_ui->OnRender();
+        }
+
+        Result = m_renderer->EndRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
+
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS DefaultApplication::EndFrame()
+{
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS DefaultApplication::OnUpdate()
 {
     // do nothing
     return C_STATUS::C_STATUS_OK;
 }
 
-Cyclone::C_STATUS DefaultApplication::OnUpdateUI()
+C_STATUS DefaultApplication::OnUpdateUI()
 {
     // do nothing
     return C_STATUS::C_STATUS_OK;
 }
 
-Cyclone::C_STATUS DefaultApplication::OnInit()
+C_STATUS DefaultApplication::OnInit()
 {
     // do nothing
     return C_STATUS::C_STATUS_OK;

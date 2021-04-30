@@ -9,6 +9,14 @@ namespace Cyclone
 
 class IApplication;
 
+struct WindowMessageParamWin
+{
+    HWND hWnd;
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+};
+
 struct WinApiWindowParams : public WindowParams
 {
     HINSTANCE hInstance;

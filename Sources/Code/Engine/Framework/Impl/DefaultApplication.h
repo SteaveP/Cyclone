@@ -11,6 +11,7 @@ class DefaultInputManager;
 struct DefaultApplicationParams
 {
     IPlatform* Platform;
+    IUIModule* UIModule;
     std::shared_ptr<IRenderer> Renderer;
     std::shared_ptr<DefaultInputManager> InputManager;
 
@@ -34,6 +35,8 @@ public:
     virtual IWindow* GetWindow() override { return m_window.get(); }
     virtual IRenderer* GetRenderer() override { return m_renderer.get(); }
 
+    virtual IUIModule* GetUI() override { return m_ui; }
+
     virtual IInputHandler* GetInputHandler() override;
     virtual IInputManager* GetInputManager() override;
 
@@ -45,7 +48,12 @@ public:
     void WaitAllPendingJobs();
     
 protected:
+    C_STATUS Frame();
+
+    C_STATUS BeginFrame();
     C_STATUS Update();
+    C_STATUS Render();
+    C_STATUS EndFrame();
 
     // IApplication
     virtual C_STATUS OnUpdate();
@@ -57,9 +65,10 @@ protected:
     double m_dt;
 
     IPlatform* m_platform;
+    IUIModule* m_ui;
+
     std::shared_ptr<IWindow> m_window;
     std::shared_ptr<IRenderer> m_renderer;
-
     std::shared_ptr<DefaultInputManager> m_inputManager;
 };
 

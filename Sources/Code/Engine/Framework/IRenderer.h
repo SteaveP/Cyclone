@@ -14,7 +14,6 @@ namespace Render
 class IWindow;
 class IApplication;
 class ISceneRenderer;
-class UIRenderer;
 
 struct RendererDesc
 {
@@ -36,7 +35,13 @@ public:
     virtual void Deinit() = 0;
 
     virtual C_STATUS BeginFrame() = 0;
+
+    virtual C_STATUS BeginRender() = 0;
     virtual C_STATUS Render() = 0;
+    virtual C_STATUS EndRender() = 0;
+
+    virtual C_STATUS EndFrame() = 0;
+
     virtual void OnResize(const IWindow* window) = 0;
 
     virtual void WaitGPU() = 0;
@@ -47,8 +52,6 @@ public:
 
     virtual IApplication* GetApp() const = 0;
     virtual ISceneRenderer* GetSceneRenderer() const = 0;
-
-    virtual UIRenderer* GetUIRenderer() const = 0;
 };
 
 } // namespace Cyclone

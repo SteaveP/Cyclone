@@ -8,6 +8,7 @@ class IRenderer;
 class IWindow;
 class IInputManager;
 class IInputHandler;
+class IUIModule;
 
 class IApplication
 {
@@ -20,12 +21,12 @@ public:
     virtual IWindow* GetWindow() = 0;
     virtual IRenderer* GetRenderer() = 0;
 
+    virtual IUIModule* GetUI() = 0;
+
     virtual double GetDeltaTime() const = 0;
 
     virtual IInputHandler* GetInputHandler() = 0;
     virtual IInputManager* GetInputManager() = 0;
-
-    virtual void OnDPIChanged(float newDPI, float oldDPI) {};
 };
 
 } // namespace Cyclone

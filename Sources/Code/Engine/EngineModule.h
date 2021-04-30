@@ -8,5 +8,4 @@
 	#endif
 #else
 	#define ENGINE_API
-	#define ENGINE_API
 #endif

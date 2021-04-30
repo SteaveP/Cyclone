@@ -3,13 +3,9 @@
 #include "Engine/Framework/Impl/DefaultApplication.h"
 #include "Engine/Framework/Impl/DefaultInputManager.h"
 #include "Engine/Render/Renderer.h"
+#include "Engine/UI/ImGui/ImGuiModule.h"
 
 #include "Engine/Framework/IPlatform.h"
-//#include "Engine/Framework/IRendererFactory.h"
-//#include "Engine/Framework/IRenderer.h"
-//#include "Engine/Framework/ISceneRenderer.h"
-//#include "Engine/Framework/IInputHandler.h"
-
 
 namespace Cyclone
 {
@@ -22,12 +18,13 @@ int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainE
     }
 
     std::shared_ptr<Render::Renderer> DefaultRenderer = std::make_shared<Render::Renderer>();
-    DefaultRenderer->InitConcrete(GEngineGetCurrentRenderBackend());
+    DefaultRenderer->PreInit(GEngineGetCurrentRenderBackend());
 
     DefaultApplicationParams params{};
     params.Platform = GEngineGetCurrentPlatform();
     params.Renderer = DefaultRenderer;
     params.InputManager = std::make_shared<DefaultInputManager>();
+    params.UIModule = GEngineGetCurrentUIModule();
     params.PlatformStartupDataPtr = PlatformDataPtr;
 #ifdef WINDOW_CAPTION
     params.WindowCaption = WINDOW_CAPTION;
