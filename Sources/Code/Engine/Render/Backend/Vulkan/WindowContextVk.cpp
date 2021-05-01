@@ -430,6 +430,7 @@ C_STATUS WindowContextVk::createSwapchain()
     VkPresentModeKHR PresentMode = chooseSwapPresentMode(SwapChainSupport.PresentModes);
     VkExtent2D Extent = chooseSwapExtent(SwapChainSupport.Capabilities);
 
+    m_minSwapchainImageCount = SwapChainSupport.Capabilities.minImageCount;
     uint32_t ImagesCount = SwapChainSupport.Capabilities.minImageCount + 1;
 
     if (SwapChainSupport.Capabilities.maxImageCount > 0 && ImagesCount > SwapChainSupport.Capabilities.maxImageCount)
@@ -586,7 +587,7 @@ C_STATUS WindowContextVk::Present(VkSemaphore RenderFinishedSemaphore)
     auto* PresentQueue = GetCommandQueue(CommandQueueType::Present);
     CASSERT(PresentQueue);
 
-    VkResult Result = vkQueuePresentKHR(PresentQueue->GetQueue(), &PresentInfo);
+    VkResult Result = vkQueuePresentKHR(PresentQueue->Get(), &PresentInfo);
 
     if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR || m_framebufferResized)
     {

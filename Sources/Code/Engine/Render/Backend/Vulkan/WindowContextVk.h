@@ -91,6 +91,7 @@ public:
 
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;
     VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
+    uint32_t m_minSwapchainImageCount;
     std::vector<VkImage> m_swapchainImages;
     std::vector<VkImageView> m_swapchainImageViews;
     VkFormat m_swapchainImageFormat;

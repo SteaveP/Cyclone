@@ -19,7 +19,16 @@
 ////#define TINYOBJLOADER_IMPLEMENTATION
 //#include <tiny_obj_loader.h>
 
+#ifdef PLATFORM_WIN64
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
 #include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
 
 #include <vector>
 #include <iostream>
@@ -34,3 +43,68 @@
 #include "../RenderBackendVkModule.h"
 
 #define C_ASSERT_VK_SUCCEEDED(x) CASSERT((x) == VkResult::VK_SUCCESS)
+#define C_ASSERT_VK_SUCCEEDED_RET(x, ret) C_ASSERT_RETURN_VAL((x) == VkResult::VK_SUCCESS, ret)
+
+namespace Cyclone::Render
+{
+
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
+//////////////////////////////////////////////////////////////////////////
+struct vec2
+{
+    float x;
+    float y;
+
+    bool operator == (const vec2& other) const noexcept
+    {
+        return x == other.x && y == other.y;
+    }
+};
+struct vec3
+{
+    float x;
+    float y;
+    float z;
+
+    bool operator == (const vec3& other) const noexcept
+    {
+        return x == other.x && y == other.y && z == other.z;
+    }
+};
+
+struct vec4
+{
+    float x;
+    float y;
+    float z;
+    float w;
+
+    bool operator == (const vec4& other) const noexcept
+    {
+        return x == other.x && y == other.y && z == other.z && w == other.w;
+    }
+};
+
+struct Vertex
+{
+    vec3 pos;
+    vec3 color;
+    vec2 texCoord;
+
+    static VkVertexInputBindingDescription getBindingDescription();
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
+
+    bool operator == (const Vertex& other) const noexcept { return pos == other.pos && color == other.color && texCoord == other.texCoord; }
+};
+
+enum class CommandQueueType
+{
+    Graphics,
+    AsyncCompute,
+    Present,
+    Count
+};
+
+} // namespace Cyclone::Render
+
