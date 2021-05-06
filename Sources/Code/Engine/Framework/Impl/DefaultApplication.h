@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/EngineModule.h"
 #include "Engine/Framework/IApplication.h"
 #include "Engine/Engine.h"
 
@@ -8,7 +9,7 @@ namespace Cyclone
 
 class DefaultInputManager;
 
-struct DefaultApplicationParams
+struct ENGINE_API DefaultApplicationParams
 {
     IPlatform* Platform;
     IUIModule* UIModule;
@@ -19,7 +20,7 @@ struct DefaultApplicationParams
     std::string WindowCaption;
 };
 
-class DefaultApplication : public IApplication
+class ENGINE_API DefaultApplication : public IApplication
 {
 public:
     DefaultApplication();
@@ -55,10 +56,11 @@ protected:
     C_STATUS Render();
     C_STATUS EndFrame();
 
-    // IApplication
+    // Callbacks
+    virtual C_STATUS OnInit();
     virtual C_STATUS OnUpdate();
     virtual C_STATUS OnUpdateUI();
-    virtual C_STATUS OnInit();
+    virtual C_STATUS OnRender();
 
 protected:
     bool m_isInit;

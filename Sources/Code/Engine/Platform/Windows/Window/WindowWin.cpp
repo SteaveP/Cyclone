@@ -294,8 +294,8 @@ C_STATUS WindowWinApi::Init(const WindowParams* generic_params)
     }
 
     // update initial state like mouse position callbacks
-    OnFrame();
-    OnFrameAfter();
+    OnUpdate();
+    OnUpdateAfter();
 
     return C_STATUS::C_STATUS_OK;
 }
@@ -361,7 +361,7 @@ void WindowWinApi::Deinit()
 
 }
 
-void WindowWinApi::OnFrame()
+void WindowWinApi::OnUpdate()
 {
     if (IsActive() && GetApp() && GetApp()->GetInputHandler())
     {
@@ -399,7 +399,7 @@ void WindowWinApi::OnFrame()
     }
 }
 
-void WindowWinApi::OnFrameAfter()
+void WindowWinApi::OnUpdateAfter()
 {
     if (IsActive() && GetCenterCursor())
     {
@@ -433,7 +433,7 @@ void WindowWinApi::OnDPIChanged(float newDPI, float oldDPI)
     }    
 }
 
-bool WindowWinApi::UpdateMessageQueue()
+C_STATUS WindowWinApi::UpdateMessageQueue()
 {
     MSG msg = {};
     
@@ -445,7 +445,7 @@ bool WindowWinApi::UpdateMessageQueue()
     }
 
     bool IsExitRequested = msg.message == WM_QUIT;
-    return !IsExitRequested;
+    return IsExitRequested ? C_STATUS::C_STATUS_SHOULD_EXIT : C_STATUS::C_STATUS_OK;
 }
 
 } // namespace Cyclone

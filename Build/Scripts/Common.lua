@@ -206,6 +206,12 @@ function SetupDefaultWorkspaceState()
         AppPath("Sources/Code/"),
     })
 
+    -- for convenience
+    -- files { AppPath("GenerateSolutionWinVS.bat") }
+    -- filter { "files:**.bat" }
+    --     buildaction "None"
+    -- filter {}
+
     --
     -- A more thorough cleanup.
     --

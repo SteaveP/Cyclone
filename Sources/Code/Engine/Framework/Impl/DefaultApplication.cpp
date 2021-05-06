@@ -194,9 +194,12 @@ C_STATUS DefaultApplication::Frame()
 C_STATUS DefaultApplication::BeginFrame()
 {
     // update window's message queues
-    if (m_window && m_window->UpdateMessageQueue() == false)
+    if (m_window)
     {
-        return C_STATUS::C_STATUS_SHOULD_EXIT;
+        C_STATUS Result = m_window->UpdateMessageQueue();
+        if (Result == C_STATUS::C_STATUS_SHOULD_EXIT)
+            return C_STATUS::C_STATUS_SHOULD_EXIT;
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     if (m_renderer)
@@ -212,7 +215,7 @@ C_STATUS DefaultApplication::Update()
 {
     if (m_window)
     {
-        m_window->OnFrame();
+        m_window->OnUpdate();
     }
 
     if (m_inputManager)
@@ -225,13 +228,13 @@ C_STATUS DefaultApplication::Update()
         m_ui->OnFrame();
     }
 
-    // custom update callback
+    // Update Callback
     {
         C_STATUS result = OnUpdate();
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
     }
 
-    // update UI
+    // Update UI Callback
     {
         C_STATUS result = OnUpdateUI();
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
@@ -239,7 +242,7 @@ C_STATUS DefaultApplication::Update()
 
     if (m_window)
     {
-        m_window->OnFrameAfter();
+        m_window->OnUpdateAfter();
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -257,7 +260,8 @@ C_STATUS DefaultApplication::Render()
 
         if (m_ui)
         {
-            m_ui->OnRender();
+            Result = m_ui->OnRender();
+            C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
         }
 
         Result = m_renderer->EndRender();
@@ -269,6 +273,12 @@ C_STATUS DefaultApplication::Render()
 
 C_STATUS DefaultApplication::EndFrame()
 {
+    return C_STATUS::C_STATUS_OK;
+}
+
+C_STATUS DefaultApplication::OnInit()
+{
+    // do nothing
     return C_STATUS::C_STATUS_OK;
 }
 
@@ -284,7 +294,7 @@ C_STATUS DefaultApplication::OnUpdateUI()
     return C_STATUS::C_STATUS_OK;
 }
 
-C_STATUS DefaultApplication::OnInit()
+C_STATUS DefaultApplication::OnRender()
 {
     // do nothing
     return C_STATUS::C_STATUS_OK;

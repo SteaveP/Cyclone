@@ -29,10 +29,10 @@ public:
     virtual C_STATUS Init(const WindowParams* params) = 0;
     virtual void Deinit() = 0;
 
-    virtual bool UpdateMessageQueue() = 0;
+    virtual C_STATUS UpdateMessageQueue() = 0;
 
-    virtual void OnFrame() = 0;
-    virtual void OnFrameAfter() = 0;
+    virtual void OnUpdate() = 0;
+    virtual void OnUpdateAfter() = 0;
     virtual void OnResize(unsigned int newWidth, unsigned int newHeight) = 0;
     virtual void OnDPIChanged(float newDPI, float oldDPI) = 0;
 

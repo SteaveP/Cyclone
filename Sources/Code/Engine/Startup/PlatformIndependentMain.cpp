@@ -12,31 +12,32 @@ namespace Cyclone
 
 int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback)
 {
+    std::shared_ptr<DefaultApplication> App;
+    DefaultApplicationParams Params{};
+
     if (EntryCallback)
     {
-        EntryCallback(argc, argv, PlatformDataPtr);
+        EntryCallback(argc, argv, PlatformDataPtr, App, Params);
     }
 
     std::shared_ptr<Render::Renderer> DefaultRenderer = std::make_shared<Render::Renderer>();
     DefaultRenderer->PreInit(GEngineGetCurrentRenderBackend());
 
-    DefaultApplicationParams params{};
-    params.Platform = GEngineGetCurrentPlatform();
-    params.Renderer = DefaultRenderer;
-    params.InputManager = std::make_shared<DefaultInputManager>();
-    params.UIModule = GEngineGetCurrentUIModule();
-    params.PlatformStartupDataPtr = PlatformDataPtr;
-#ifdef WINDOW_CAPTION
-    params.WindowCaption = WINDOW_CAPTION;
-#else
-    params.WindowCaption = "Cyclone's Window";
-#endif
+    Params.Platform = GEngineGetCurrentPlatform();
+    Params.Renderer = DefaultRenderer;
+    Params.InputManager = std::make_shared<DefaultInputManager>();
+    Params.UIModule = GEngineGetCurrentUIModule();
+    Params.PlatformStartupDataPtr = PlatformDataPtr;
 
-    DefaultApplication app{};
+    if (Params.WindowCaption.empty())
+        Params.WindowCaption = "Cyclone's Window";
 
-    if (app.Init(params) == C_STATUS::C_STATUS_OK)
+    if (App == nullptr)
+        App = std::make_shared<DefaultApplication>();
+
+    if (App->Init(Params) == C_STATUS::C_STATUS_OK)
     {
-        return app.Run();
+        return App->Run();
     }
 
     return -1;

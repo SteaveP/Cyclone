@@ -70,10 +70,6 @@ C_STATUS ImGUIModule::OnFrame()
 
     ImGui::NewFrame();
 
-    // #todo_ui
-    ImGui::Begin("Hello, world!");
-    ImGui::End();
-
     return C_STATUS::C_STATUS_OK;
 }
 

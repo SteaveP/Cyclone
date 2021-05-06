@@ -32,10 +32,10 @@ public:
     virtual C_STATUS Init(const WindowParams* params) override;
     virtual void Deinit() override;
 
-    virtual bool UpdateMessageQueue() override;
+    virtual C_STATUS UpdateMessageQueue() override;
 
-    virtual void OnFrame() override;
-    virtual void OnFrameAfter() override;
+    virtual void OnUpdate() override;
+    virtual void OnUpdateAfter() override;
     virtual void OnResize(unsigned int newWidth, unsigned int newHeight) override;
     virtual void OnDPIChanged(float newDPI, float oldDPI) override;
 

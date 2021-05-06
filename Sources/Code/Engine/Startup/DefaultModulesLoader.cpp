@@ -16,7 +16,8 @@
 #include "Engine/Render/Backend/Vulkan/UI/ImGUIRendererVk.h"
 #endif
 
-Cyclone::MainEntryCallback MainCallback = [](int argc, char* argv[], void* PlatformDataPtr)
+Cyclone::MainEntryCallback LoadModuleMainCallback = [](int argc, char* argv[], void* PlatformDataPtr,
+    std::shared_ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
 {
     C_UNREFERENCED(argc);
     C_UNREFERENCED(argv);

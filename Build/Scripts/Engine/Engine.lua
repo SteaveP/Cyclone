@@ -12,6 +12,7 @@ function AddEngineDependency()
 	AddEngineDependencyInternal()	
 	AddPlatformsDependency()
 	AddRendersDependency()
+	IncludeImGuiReference()
 end
 
 function IncludeImGuiReference()
