@@ -26,8 +26,13 @@ C_STATUS EditorApplication::OnUpdateUI()
     // viewport
     if (ImGui::Begin("Viewport"))
     {
+        // #todo_ui
         ImGui::End();
     }
+
+    // content browser
+    // world outliner
+    // properties grid
 
     return C_STATUS::C_STATUS_OK;
 }

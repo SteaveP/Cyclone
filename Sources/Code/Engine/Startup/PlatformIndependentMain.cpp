@@ -12,7 +12,7 @@ namespace Cyclone
 
 int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback)
 {
-    std::shared_ptr<DefaultApplication> App;
+    std::shared_ptr<DefaultApplication> App{};
     DefaultApplicationParams Params{};
 
     if (EntryCallback)
