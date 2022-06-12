@@ -10,7 +10,7 @@ namespace Cyclone::Render
 C_STATUS RenderPassVk::Init(const RenderPassVkInitInfo& InitInfo)
 {
     m_backend = InitInfo.Backend;
-    WindowContextVk& Context = m_backend->GetWindowContext();
+    WindowContextVulkan& Context = m_backend->GetWindowContext();
 
     VkRenderPassCreateInfo RenderPassInfo{};
     RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

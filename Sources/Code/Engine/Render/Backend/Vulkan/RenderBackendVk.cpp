@@ -15,13 +15,18 @@ namespace Cyclone::Render
 
 C_STATUS RenderBackendVulkan::Init(IRenderer* Renderer)
 {
-    m_renderer = Renderer;
+    m_Renderer = Renderer;
 
-    C_STATUS result = m_globalContext.Init(this);
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    C_STATUS Result = C_STATUS::C_STATUS_OK;
+    {
+        InstanceCreationDesc Desc{};
 
-    result = m_windowContext.Init(this, m_renderer->GetApp()->GetWindow());
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        Result = m_GlobalContext.Init(this, Desc);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
+
+    Result = m_WindowContext.Init(this, m_Renderer->GetApp()->GetWindow());
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
     VkDescriptorPoolSize PSize{};
     PSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -33,8 +38,8 @@ C_STATUS RenderBackendVulkan::Init(IRenderer* Renderer)
     //DescPoolInfo.flags = VkDescriptorPoolCreateFlagBits:: ;
     DescPoolInfo.poolSizeCount = 1;
     DescPoolInfo.pPoolSizes = &PSize;
-    VkResult ResultVk = vkCreateDescriptorPool(m_windowContext.GetDevice(), &DescPoolInfo, nullptr, &m_descriptorPool);
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+    VkResult ResultVk = vkCreateDescriptorPool(m_WindowContext.GetDevice(), &DescPoolInfo, nullptr, &m_DescriptorPool);
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
     DrawInit(this);
 
@@ -43,42 +48,42 @@ C_STATUS RenderBackendVulkan::Init(IRenderer* Renderer)
 
 C_STATUS RenderBackendVulkan::Shutdown()
 {
-    // #todo_vk wait?
+    // #todo_vk wait for GPU?
 
-    m_windowContext.Shutdown();
-    m_globalContext.Shutdown();
+    m_WindowContext.Shutdown();
+    m_GlobalContext.Shutdown();
 
     return C_STATUS::C_STATUS_OK;
 }
 VkImageView RenderBackendVulkan::CreateImageView(VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask)
 {
-    VkImageViewCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    createInfo.image = image;
-    createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    createInfo.format = format;
-    createInfo.components.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.subresourceRange.aspectMask = aspectMask;
-    createInfo.subresourceRange.baseMipLevel = 0;
-    createInfo.subresourceRange.levelCount = mipLevels;
-    createInfo.subresourceRange.baseArrayLayer = 0;
-    createInfo.subresourceRange.layerCount = 1;
+    VkImageViewCreateInfo CreateInfo{};
+    CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    CreateInfo.image = image;
+    CreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    CreateInfo.format = format;
+    CreateInfo.components.r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
+    CreateInfo.components.g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
+    CreateInfo.components.b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
+    CreateInfo.components.a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
+    CreateInfo.subresourceRange.aspectMask = aspectMask;
+    CreateInfo.subresourceRange.baseMipLevel = 0;
+    CreateInfo.subresourceRange.levelCount = mipLevels;
+    CreateInfo.subresourceRange.baseArrayLayer = 0;
+    CreateInfo.subresourceRange.layerCount = 1;
 
-    VkImageView imageView;
+    VkImageView ImageView;
 
-    VkResult result = vkCreateImageView(m_windowContext.GetDevice(), &createInfo, nullptr, &imageView);
+    VkResult result = vkCreateImageView(m_WindowContext.GetDevice(), &CreateInfo, nullptr, &ImageView);
     C_ASSERT_VK_SUCCEEDED(result);
 
-    return imageView;
+    return ImageView;
 }
 
 
 C_STATUS RenderBackendVulkan::BeginRender()
 {
-    return m_windowContext.BeginRender();
+    return m_WindowContext.BeginRender();
 }
 
 C_STATUS RenderBackendVulkan::Render()
@@ -90,44 +95,59 @@ C_STATUS RenderBackendVulkan::Render()
 
 C_STATUS RenderBackendVulkan::EndRender()
 {
+    // #todo_vk temp
+    {
+        CommandQueueVk* CommandQueue = m_WindowContext.GetCommandQueue(CommandQueueType::Graphics);
+
+        if (CommandBufferVk* CommandBuffer = CommandQueue->AllocateCommandBuffer())
+        {
+            CommandBuffer->Begin();
+            CommandBuffer->End();
+
+            auto CurrentFrame = m_WindowContext.GetCurrentLocalFrame();
+            CommandQueue->Submit(CommandBuffer, 1,
+                m_WindowContext.GetImageAvailableSemaphore(m_WindowContext.GetCurrentLocalFrame()),
+                m_WindowContext.GetInflightFence(m_WindowContext.GetCurrentLocalFrame()), true);
+        }
+    }
     // present
-    C_STATUS Result = m_windowContext.Present(VK_NULL_HANDLE);
+    C_STATUS Result = m_WindowContext.Present(VK_NULL_HANDLE);
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
-    m_currentFrame++;
-    m_currentLocalFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    m_CurrentFrame++;
+    m_CurrentLocalFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
     return C_STATUS::C_STATUS_OK;
 }
 
-VkFormat RenderBackendVulkan::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkFormat RenderBackendVulkan::FindSupportedFormat(DeviceHandle Device, const std::vector<VkFormat>& Candidates, VkImageTiling Tiling, VkFormatFeatureFlags Features)
 {
-    for (VkFormat format : candidates)
+    for (VkFormat Format : Candidates)
     {
         VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(m_windowContext.GetPhysDevice(), format, &props);
+        vkGetPhysicalDeviceFormatProperties(m_GlobalContext.GetPhysicalDevice(Device).PhysicalDeviceHandle, Format, &props);
 
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
-            return format;
-        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
-            return format;
+        if (Tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & Features) == Features)
+            return Format;
+        else if (Tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & Features) == Features)
+            return Format;
     }
 
     CASSERT(false); // unsupported
     return VK_FORMAT_UNDEFINED;
 }
 
-VkFormat RenderBackendVulkan::FindDepthFormat()
+VkFormat RenderBackendVulkan::FindDepthFormat(DeviceHandle Device)
 {
-    return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    return FindSupportedFormat(Device, { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
         VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-bool RenderBackendVulkan::hasStencilComponent(VkFormat format)
+bool RenderBackendVulkan::hasStencilComponent(VkFormat Format)
 {
-    return format == VK_FORMAT_D16_UNORM_S8_UINT
-        || format == VK_FORMAT_D24_UNORM_S8_UINT
-        || format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+    return Format == VK_FORMAT_D16_UNORM_S8_UINT
+        || Format == VK_FORMAT_D24_UNORM_S8_UINT
+        || Format == VK_FORMAT_D32_SFLOAT_S8_UINT;
 }
 
 } //namespace Cyclone::Render

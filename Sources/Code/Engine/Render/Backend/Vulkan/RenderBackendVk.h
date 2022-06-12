@@ -6,8 +6,8 @@
 
 #include "Common/CommonVulkan.h"
 
-#include "GlobalContextVk.h"
-#include "WindowContextVk.h"
+#include "GlobalContextVulkan.h"
+#include "WindowContextVulkan.h"
 
 namespace Cyclone::Render
 {
@@ -25,31 +25,31 @@ public:
     virtual C_STATUS Render() override;
     virtual C_STATUS EndRender() override;
 
-    virtual uint32_t GetCurrentFrame() const override { return m_currentFrame; }
-    virtual uint32_t GetCurrentLocalFrame() const override { return m_currentLocalFrame; }
+    virtual uint32_t GetCurrentFrame() const override { return m_CurrentFrame; }
+    virtual uint32_t GetCurrentLocalFrame() const override { return m_CurrentLocalFrame; }
 
-    GlobalContextVk& GetGlobalContext() { return m_globalContext; }
-    WindowContextVk& GetWindowContext() { return m_windowContext; }
+    GlobalContextVulkan& GetGlobalContext() { return m_GlobalContext; }
+    WindowContextVulkan& GetWindowContext() { return m_WindowContext; }
 
-    VkDescriptorPool GetDescriptorPool() const { return m_descriptorPool; }
+    VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
 
     VkImageView CreateImageView(VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask);
 
-    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-    VkFormat FindDepthFormat();
+    VkFormat FindSupportedFormat(DeviceHandle Device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    VkFormat FindDepthFormat(DeviceHandle Device);
     bool hasStencilComponent(VkFormat format);
 
 protected:
-    IRenderer* m_renderer = nullptr;
+    IRenderer* m_Renderer = nullptr;
 
 protected:
-    GlobalContextVk m_globalContext;
-    WindowContextVk m_windowContext;
+    GlobalContextVulkan m_GlobalContext;
+    WindowContextVulkan m_WindowContext;
 
-    VkDescriptorPool m_descriptorPool;
+    VkDescriptorPool m_DescriptorPool;
 
-    uint32_t m_currentLocalFrame = 0; // Local frame counter [0, MAX_FRAMES_IN_FLIGHT]
-    uint32_t m_currentFrame = 0; // Global frame counter
+    uint32_t m_CurrentLocalFrame = 0; // Local frame counter [0, MAX_FRAMES_IN_FLIGHT]
+    uint32_t m_CurrentFrame = 0; // Global frame counter
 };
 
 } // namespace Cyclone::Render
