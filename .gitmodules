@@ -1,18 +1,24 @@
 [submodule "Sources/ThirdParty/ImGuiFileDialog"]
 	path = Sources/ThirdParty/ImGuiFileDialog
+	branch = Lib_Only
 	url = https://github.com/aiekick/ImGuiFileDialog.git
 [submodule "Sources/ThirdParty/Lyra"]
 	path = Sources/ThirdParty/Lyra
+	branch = master
 	url = https://github.com/bfgroup/Lyra.git
-[submodule "Sources/ThirdParty/microprofile"]
-	path = Sources/ThirdParty/microprofile
+[submodule "Sources/ThirdParty/Microprofile"]
+	path = Sources/ThirdParty/Microprofile
+	branch = master
 	url = https://github.com/jonasmr/microprofile
-[submodule "Sources/ThirdParty/entt"]
-	path = Sources/ThirdParty/entt
+[submodule "Sources/ThirdParty/EnTT"]
+	path = Sources/ThirdParty/EnTT
+	branch = master
 	url = https://github.com/skypjack/entt.git
-[submodule "Sources/ThirdParty/VulkanMemoryAllocator"]
-	path = Sources/ThirdParty/VulkanMemoryAllocator
-	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator"]
 	path = Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator
+	branch = master
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "Sources/ThirdParty/ImGui"]
+	path = Sources/ThirdParty/ImGui
+	branch = docking
+	url = https://github.com/ocornut/imgui.git
