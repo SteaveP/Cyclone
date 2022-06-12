@@ -17,6 +17,8 @@ struct FrameBufferVkInitInfo
     uint32_t Height;
     uint32_t Layers;
 
+    DeviceHandle Device;
+
     RenderPassVk* RenderPass;
     RenderBackendVulkan* Backend;
 };

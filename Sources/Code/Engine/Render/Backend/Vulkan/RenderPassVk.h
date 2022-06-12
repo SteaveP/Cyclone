@@ -24,6 +24,8 @@ struct RenderPassVkInitInfo
     VkAttachmentDescription DepthAttachment;
     VkAttachmentReference DepthAttachmentRef;
 
+    DeviceHandle Device;
+
     uint32_t SubpassCount;
     std::array<VkSubpassDescription, RENDER_PASS_MAX_ATTACHMENTS> Subpass;
     uint32_t SubpassDependencyCount;
@@ -51,7 +53,7 @@ public:
     VkRenderPass Get() const { return m_renderPass; }
 
 protected:
-    RenderBackendVulkan* m_backend = nullptr;
+    RenderBackendVulkan* m_Backend = nullptr;
     VkRenderPass m_renderPass = VK_NULL_HANDLE;
 };
 

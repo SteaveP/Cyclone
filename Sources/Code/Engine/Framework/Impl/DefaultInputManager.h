@@ -14,13 +14,13 @@ public:
     DefaultInputManager();
     virtual ~DefaultInputManager();
 
-    C_STATUS Init(IApplication* app);
+    C_STATUS Init(IApplication* App);
 
     // IInputHandler
-    virtual void OnKeyDown(int key, bool prevKeyState) override;
-    virtual void OnKeyUp(int key) override;
-    virtual void OnMouseDown(MouseKey key) override;
-    virtual void OnMouseUp(MouseKey key) override;
+    virtual void OnKeyDown(int Key, bool PrevKeyState) override;
+    virtual void OnKeyUp(int Key) override;
+    virtual void OnMouseDown(MouseKey Key) override;
+    virtual void OnMouseUp(MouseKey Key) override;
     virtual void OnMouseMove(short x, short y) override;
     virtual void InjectMousePositionDelta(short deltaX, short deltaY) override;
     virtual void OnMouseWheel(float relativeDelta) override;
@@ -29,45 +29,45 @@ public:
     // IInputManager
     virtual void OnFrame() override;
 
-    virtual bool IsKeyDown(int key) override;
-    virtual bool IsKeyPressed(int key) override;
+    virtual bool IsKeyDown(int Key) override;
+    virtual bool IsKeyPressed(int Key) override;
 
-    virtual bool IsMouseDown(MouseKey key) override;
+    virtual bool IsMouseDown(MouseKey Key) override;
 
-    virtual void GetMouseCoords(short& x, short& y) override;
-    virtual void GetMouseCoordsDelta(short& x, short& y) override;
+    virtual void GetMouseCoords(short& X, short& Y) override;
+    virtual void GetMouseCoordsDelta(short& X, short& Y) override;
     virtual float GetMouseWheel() override;
     virtual float GetMouseHWheel() override;
 
 protected:
-    IApplication* m_app;
+    IApplication* m_App;
 
     struct State
     {
-        bool m_mouseButtons[MouseKeyCount];
-        float m_mouseWheel;
-        float m_mouseHWheel;
-        short m_mouseX;
-        short m_mouseY;
-        short m_mouseDeltaX;
-        short m_mouseDeltaY;
+        bool m_MouseButtons[MouseKeyCount];
+        float m_MouseWheel;
+        float m_MouseHWheel;
+        short m_MouseX;
+        short m_MouseY;
+        short m_MouseDeltaX;
+        short m_MouseDeltaY;
 
         static const int MaxKeys = 256;
-        bool m_keysDown[MaxKeys];
+        bool m_KeysDown[MaxKeys];
         bool m_keysPressed[MaxKeys];
 
         void OnFrame();
 
-        void UpdateMouse(const State& pendingState);
-        void UpdateKeyboard(const State& pendingState);
+        void UpdateMouse(const State& PendingState);
+        void UpdateKeyboard(const State& PendingState);
 
         void Reset();
-        void ResetMouse(bool resetPosition);
+        void ResetMouse(bool ResetPosition);
         void ResetKeyboard();
     };
 
-    State m_currentState;
-    State m_pendingState;
+    State m_CurrentState;
+    State m_PendingState;
 };
 
 } // namespace Cyclone

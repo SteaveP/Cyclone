@@ -29,6 +29,7 @@ public:
     uint32_t GetQueueIndex() const { return m_queueIndex; }
 
     RenderBackendVulkan* GetBackend() const { return m_backend; }
+    DeviceHandle GetDevice() const { return m_Device; }
 
 public:
 

@@ -40,7 +40,7 @@ C_STATUS CommandQueueVk::Submit(CommandBufferVk* CommandBuffers, uint32_t Comman
     
     if (SubmitCompletedFence != VK_NULL_HANDLE)
     {
-        vkResetFences(m_backend->GetWindowContext().GetDevice(), 1, &SubmitCompletedFence);
+        vkResetFences(m_backend->GetGlobalContext().GetLogicalDevice(m_Device).LogicalDeviceHandle, 1, &SubmitCompletedFence);
     }
 
     VkResult result = vkQueueSubmit(m_queue, 1, &SubmitInfo, SubmitCompletedFence);

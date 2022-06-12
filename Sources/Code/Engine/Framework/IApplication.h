@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/Types.h"
+
 namespace Cyclone
 {
 
@@ -18,7 +20,8 @@ public:
     virtual int Run() = 0;
 
     virtual IPlatform* GetPlatform() = 0;
-    virtual IWindow* GetWindow() = 0;
+    virtual IWindow* GetWindow(uint32 Index) = 0;
+    virtual uint32 GetWindowsCount() const = 0;
     virtual IRenderer* GetRenderer() = 0;
 
     virtual IUIModule* GetUI() = 0;

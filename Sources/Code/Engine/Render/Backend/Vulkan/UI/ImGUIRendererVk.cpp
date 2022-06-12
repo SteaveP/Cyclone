@@ -42,7 +42,7 @@ namespace Cyclone::Render
         C_ASSERT_RETURN_VAL(m_pimpl->Backend, C_STATUS::C_STATUS_INVALID_ARG);
 
         RenderBackendVulkan* Backend = m_pimpl->Backend;
-        WindowContextVulkan& WindowContext = Backend->GetWindowContext();
+        WindowContextVulkan& WindowContext = Backend->GetWindowContext(0);
         {
             RenderPassVkInitInfo RPInitInfo{};
 
@@ -80,6 +80,7 @@ namespace Cyclone::Render
             SubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
             RPInitInfo.Backend = Backend;
+            RPInitInfo.Device = WindowContext.GetDevice();
 
             C_STATUS Result = m_pimpl->RenderPassUI.Init(RPInitInfo);
             CASSERT(C_SUCCEEDED(Result));
@@ -88,6 +89,7 @@ namespace Cyclone::Render
         {
             FrameBufferVkInitInfo FBInitInfo{};
             FBInitInfo.Backend = Backend;
+            FBInitInfo.Device = WindowContext.GetDevice();
             FBInitInfo.RenderPass = &m_pimpl->RenderPassUI;
             FBInitInfo.Width = WindowContext.GetSwapchainExtent().width;
             FBInitInfo.Height = WindowContext.GetSwapchainExtent().height;
@@ -111,7 +113,7 @@ namespace Cyclone::Render
         ImGui_ImplVulkan_InitInfo InitInfo{};
         InitInfo.Instance = Backend->GetGlobalContext().GetInstance();
         InitInfo.PhysicalDevice = WindowContext.GetPhysDevice();
-        InitInfo.Device = WindowContext.GetDevice();
+        InitInfo.Device = WindowContext.GetLogicDevice();
         InitInfo.Queue = WindowContext.GetCommandQueue(CommandQueueType::Graphics)->Get();
         InitInfo.QueueFamily = WindowContext.GetCommandQueue(CommandQueueType::Graphics)->GetQueueFamilyIndex();
         InitInfo.PipelineCache = VK_NULL_HANDLE;
@@ -164,7 +166,7 @@ namespace Cyclone::Render
         //PROFILE_GPU_SCOPED_EVENT(commandList->GetCommandList(), "ImGUI Render");
 
         RenderBackendVulkan* Backend = m_pimpl->Backend;
-        WindowContextVulkan& WindowContext = Backend->GetWindowContext();
+        WindowContextVulkan& WindowContext = Backend->GetWindowContext(0);
 
         CommandQueueVk* CommandQueue = WindowContext.GetCommandQueue(CommandQueueType::Graphics);
         CASSERT(CommandQueue);

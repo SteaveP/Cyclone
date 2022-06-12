@@ -25,8 +25,16 @@ C_STATUS RenderBackendVulkan::Init(IRenderer* Renderer)
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
-    Result = m_WindowContext.Init(this, m_Renderer->GetApp()->GetWindow());
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    IApplication* App = m_Renderer->GetApp();
+    m_WindowContexts.resize(App->GetWindowsCount());
+    for (uint32 i = 0; i < App->GetWindowsCount(); ++i)
+    {
+        if (auto Window = App->GetWindow(i))
+        {
+            Result = m_WindowContexts[i].Init(this, Window);
+            C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+        }
+    }
 
     VkDescriptorPoolSize PSize{};
     PSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -38,7 +46,7 @@ C_STATUS RenderBackendVulkan::Init(IRenderer* Renderer)
     //DescPoolInfo.flags = VkDescriptorPoolCreateFlagBits:: ;
     DescPoolInfo.poolSizeCount = 1;
     DescPoolInfo.pPoolSizes = &PSize;
-    VkResult ResultVk = vkCreateDescriptorPool(m_WindowContext.GetDevice(), &DescPoolInfo, nullptr, &m_DescriptorPool);
+    VkResult ResultVk = vkCreateDescriptorPool(m_WindowContexts[0].GetLogicDevice(), &DescPoolInfo, nullptr, &m_DescriptorPool);
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
     DrawInit(this);
@@ -50,12 +58,16 @@ C_STATUS RenderBackendVulkan::Shutdown()
 {
     // #todo_vk wait for GPU?
 
-    m_WindowContext.Shutdown();
+    for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
+    {
+        auto& WindowContext = m_WindowContexts[i];
+        WindowContext.Shutdown();
+    }
     m_GlobalContext.Shutdown();
 
     return C_STATUS::C_STATUS_OK;
 }
-VkImageView RenderBackendVulkan::CreateImageView(VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask)
+VkImageView RenderBackendVulkan::CreateImageView(DeviceHandle Device, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask)
 {
     VkImageViewCreateInfo CreateInfo{};
     CreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -74,7 +86,7 @@ VkImageView RenderBackendVulkan::CreateImageView(VkImage image, uint32_t mipLeve
 
     VkImageView ImageView;
 
-    VkResult result = vkCreateImageView(m_WindowContext.GetDevice(), &CreateInfo, nullptr, &ImageView);
+    VkResult result = vkCreateImageView(GetGlobalContext().GetLogicalDevice(Device).LogicalDeviceHandle, &CreateInfo, nullptr, &ImageView);
     C_ASSERT_VK_SUCCEEDED(result);
 
     return ImageView;
@@ -83,7 +95,14 @@ VkImageView RenderBackendVulkan::CreateImageView(VkImage image, uint32_t mipLeve
 
 C_STATUS RenderBackendVulkan::BeginRender()
 {
-    return m_WindowContext.BeginRender();
+    for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
+    {
+        C_STATUS Result = m_WindowContexts[i].BeginRender();
+        if (!C_SUCCEEDED(Result))
+            return Result;
+    }
+
+    return C_STATUS::C_STATUS_OK;
 }
 
 C_STATUS RenderBackendVulkan::Render()
@@ -96,23 +115,27 @@ C_STATUS RenderBackendVulkan::Render()
 C_STATUS RenderBackendVulkan::EndRender()
 {
     // #todo_vk temp
+    for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
     {
-        CommandQueueVk* CommandQueue = m_WindowContext.GetCommandQueue(CommandQueueType::Graphics);
+        CommandQueueVk* CommandQueue = m_WindowContexts[i].GetCommandQueue(CommandQueueType::Graphics);
 
         if (CommandBufferVk* CommandBuffer = CommandQueue->AllocateCommandBuffer())
         {
             CommandBuffer->Begin();
             CommandBuffer->End();
 
-            auto CurrentFrame = m_WindowContext.GetCurrentLocalFrame();
+            auto CurrentFrame = m_WindowContexts[i].GetCurrentLocalFrame();
             CommandQueue->Submit(CommandBuffer, 1,
-                m_WindowContext.GetImageAvailableSemaphore(m_WindowContext.GetCurrentLocalFrame()),
-                m_WindowContext.GetInflightFence(m_WindowContext.GetCurrentLocalFrame()), true);
+                m_WindowContexts[i].GetImageAvailableSemaphore(m_WindowContexts[i].GetCurrentLocalFrame()),
+                m_WindowContexts[i].GetInflightFence(m_WindowContexts[i].GetCurrentLocalFrame()), true);
         }
     }
     // present
-    C_STATUS Result = m_WindowContext.Present(VK_NULL_HANDLE);
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
+    {
+        C_STATUS Result = m_WindowContexts[i].Present(VK_NULL_HANDLE);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
 
     m_CurrentFrame++;
     m_CurrentLocalFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;

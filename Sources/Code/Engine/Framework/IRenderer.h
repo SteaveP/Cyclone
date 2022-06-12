@@ -8,7 +8,7 @@ namespace Cyclone
 
 namespace Render
 {
-    class IRendererBackend;
+class IRendererBackend;
 } // namespace Render
 
 class IWindow;

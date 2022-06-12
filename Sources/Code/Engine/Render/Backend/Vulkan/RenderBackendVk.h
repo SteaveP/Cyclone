@@ -29,11 +29,12 @@ public:
     virtual uint32_t GetCurrentLocalFrame() const override { return m_CurrentLocalFrame; }
 
     GlobalContextVulkan& GetGlobalContext() { return m_GlobalContext; }
-    WindowContextVulkan& GetWindowContext() { return m_WindowContext; }
+    WindowContextVulkan& GetWindowContext(uint32 Index) { return m_WindowContexts[Index]; }
+    uint32 GetWindowContextCount() const { return static_cast<uint32>(m_WindowContexts.size()); }
 
     VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
 
-    VkImageView CreateImageView(VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask);
+    VkImageView CreateImageView(DeviceHandle Device, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectMask);
 
     VkFormat FindSupportedFormat(DeviceHandle Device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
     VkFormat FindDepthFormat(DeviceHandle Device);
@@ -44,7 +45,7 @@ protected:
 
 protected:
     GlobalContextVulkan m_GlobalContext;
-    WindowContextVulkan m_WindowContext;
+    std::vector<WindowContextVulkan> m_WindowContexts;
 
     VkDescriptorPool m_DescriptorPool;
 

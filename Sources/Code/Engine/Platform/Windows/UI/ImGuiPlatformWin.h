@@ -16,7 +16,7 @@ public:
     virtual C_STATUS OnShutdown(void* Instance, IWindow* window) override;
 
 protected:
-    IUIModule* m_module;
+    IUIModule* m_Module;
 };
 
 } // namespace Cyclone

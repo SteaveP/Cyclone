@@ -96,7 +96,7 @@ void WindowContextVulkan::DestroySurface()
 
 void WindowContextVulkan::CleanupSwapchain()
 {
-    VkDevice Device = GetDevice();
+    VkDevice Device = GetLogicDevice();
 
     for (auto ImageView : m_SwapchainImageViews)
     {
@@ -125,7 +125,7 @@ C_STATUS WindowContextVulkan::RecreateSwapchain()
         CASSERT(false);
     }
 
-    vkDeviceWaitIdle(GetDevice());
+    vkDeviceWaitIdle(GetLogicDevice());
 
     CleanupSwapchain();
 
@@ -141,7 +141,7 @@ C_STATUS WindowContextVulkan::CreateSwapchainImageViews()
 
     for (size_t i = 0; i < m_SwapchainImageViews.size(); ++i)
     {
-        m_SwapchainImageViews[i] = m_Backend->CreateImageView(m_SwapchainImages[i], 1, m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_SwapchainImageViews[i] = m_Backend->CreateImageView(m_Device, m_SwapchainImages[i], 1, m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -272,13 +272,13 @@ C_STATUS WindowContextVulkan::CreateSyncObjects()
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        Result = vkCreateSemaphore(GetDevice(), &SemaphoreInfo, nullptr, &m_ImageAvailabeSemaphores[i]);
+        Result = vkCreateSemaphore(GetLogicDevice(), &SemaphoreInfo, nullptr, &m_ImageAvailabeSemaphores[i]);
         C_ASSERT_VK_SUCCEEDED(Result);
 
-        Result = vkCreateSemaphore(GetDevice(), &SemaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]);
+        Result = vkCreateSemaphore(GetLogicDevice(), &SemaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]);
         C_ASSERT_VK_SUCCEEDED(Result);
 
-        Result = vkCreateFence(GetDevice(), &FenceInfo, nullptr, &m_InflightFences[i]);
+        Result = vkCreateFence(GetLogicDevice(), &FenceInfo, nullptr, &m_InflightFences[i]);
         C_ASSERT_VK_SUCCEEDED(Result);
     }
 
@@ -287,11 +287,11 @@ C_STATUS WindowContextVulkan::CreateSyncObjects()
 
 C_STATUS WindowContextVulkan::BeginRender()
 {
-    vkWaitForFences(GetDevice(), 1, &m_InflightFences[m_CurrentLocalFrame], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(GetLogicDevice(), 1, &m_InflightFences[m_CurrentLocalFrame], VK_TRUE, UINT64_MAX);
 
     CheckCommandLists();
 
-    VkResult result = vkAcquireNextImageKHR(GetDevice(), m_Swapchain, UINT64_MAX, m_ImageAvailabeSemaphores[m_CurrentLocalFrame], VK_NULL_HANDLE, &m_CurrentImageIndex);
+    VkResult result = vkAcquireNextImageKHR(GetLogicDevice(), m_Swapchain, UINT64_MAX, m_ImageAvailabeSemaphores[m_CurrentLocalFrame], VK_NULL_HANDLE, &m_CurrentImageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -305,7 +305,7 @@ C_STATUS WindowContextVulkan::BeginRender()
 
     if (m_ImagesInFlight[m_CurrentImageIndex] != VK_NULL_HANDLE)
     {
-        vkWaitForFences(GetDevice(), 1, &m_ImagesInFlight[m_CurrentImageIndex], VK_TRUE, UINT64_MAX);
+        vkWaitForFences(GetLogicDevice(), 1, &m_ImagesInFlight[m_CurrentImageIndex], VK_TRUE, UINT64_MAX);
     }
 
     m_ImagesInFlight[m_CurrentImageIndex] = m_InflightFences[m_CurrentLocalFrame];
@@ -379,7 +379,7 @@ void WindowContextVulkan::CheckCommandLists()
 
 void WindowContextVulkan::DestroySyncObjects()
 {
-    VkDevice Device = GetDevice();
+    VkDevice Device = GetLogicDevice();
     for (size_t i = 0; i < MAX_SWAPCHAIN_IMAGE_COUNT; ++i)
     {
         if (m_ImageAvailabeSemaphores[i])

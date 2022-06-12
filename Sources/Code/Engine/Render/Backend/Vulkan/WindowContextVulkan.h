@@ -26,8 +26,9 @@ public:
     RenderBackendVulkan* GetBackend() const { return m_Backend; }
     IWindow* GetWindow() const { return m_Window; }
 
-    VkPhysicalDevice GetPhysDevice() { return m_PhysDeviceHandleCache; }
-    VkDevice GetDevice() { return m_DeviceHandleCache; }
+    DeviceHandle GetDevice() const { return m_Device; }
+    VkPhysicalDevice GetPhysDevice() const { return m_PhysDeviceHandleCache; }
+    VkDevice GetLogicDevice() const { return m_DeviceHandleCache; }
 
     VkFormat GetSwapchainImageFormat() const { return m_SwapchainImageFormat; }
     VkExtent2D GetSwapchainExtent() const { return m_SwapchainExtent; }
@@ -45,10 +46,10 @@ public:
 
     CommandQueueVk* GetCommandQueue(CommandQueueType QueueType) const;
 
-    VkSemaphore m_ImageAvailabeSemaphores[MAX_SWAPCHAIN_IMAGE_COUNT];
-    VkSemaphore m_RenderFinishedSemaphores[MAX_SWAPCHAIN_IMAGE_COUNT];
-    VkFence m_InflightFences[MAX_SWAPCHAIN_IMAGE_COUNT];
-    VkFence m_ImagesInFlight[MAX_SWAPCHAIN_IMAGE_COUNT];
+    VkSemaphore m_ImageAvailabeSemaphores[MAX_SWAPCHAIN_IMAGE_COUNT]{};
+    VkSemaphore m_RenderFinishedSemaphores[MAX_SWAPCHAIN_IMAGE_COUNT]{};
+    VkFence m_InflightFences[MAX_SWAPCHAIN_IMAGE_COUNT]{};
+    VkFence m_ImagesInFlight[MAX_SWAPCHAIN_IMAGE_COUNT]{};
 
 protected:
     void CheckCommandLists();

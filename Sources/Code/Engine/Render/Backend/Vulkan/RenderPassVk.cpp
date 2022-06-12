@@ -9,9 +9,9 @@ namespace Cyclone::Render
 
 C_STATUS RenderPassVk::Init(const RenderPassVkInitInfo& InitInfo)
 {
-    m_backend = InitInfo.Backend;
-    WindowContextVulkan& Context = m_backend->GetWindowContext();
-
+    m_Backend = InitInfo.Backend;
+    VkDevice Device = m_Backend->GetGlobalContext().GetLogicalDevice(InitInfo.Device).LogicalDeviceHandle;
+    
     VkRenderPassCreateInfo RenderPassInfo{};
     RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     RenderPassInfo.attachmentCount = static_cast<uint32_t>(InitInfo.ColorAttachmentCount);
@@ -21,7 +21,7 @@ C_STATUS RenderPassVk::Init(const RenderPassVkInitInfo& InitInfo)
     RenderPassInfo.dependencyCount = InitInfo.SubpassDependencyCount;
     RenderPassInfo.pDependencies = InitInfo.SubpassDependency.data();
 
-    VkResult Result = vkCreateRenderPass(Context.GetDevice(), &RenderPassInfo, nullptr, &m_renderPass);
+    VkResult Result = vkCreateRenderPass(Device, &RenderPassInfo, nullptr, &m_renderPass);
     C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
 
     return C_STATUS::C_STATUS_OK;

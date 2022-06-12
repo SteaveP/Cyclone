@@ -34,10 +34,10 @@ C_STATUS ImGUIModule::Init(IApplication* app, float dpi)
     ImGui::StyleColorsDark();
 
     // platform and renderer init
-    C_STATUS result = m_platform->OnInit(m_context, this, m_app->GetPlatform(), m_app->GetWindow());
+    C_STATUS result = m_platform->OnInit(m_context, this, m_app->GetPlatform(), m_app->GetWindow(0));
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
 
-    result = m_renderer->OnInit(m_context, this, m_app->GetRenderer()->GetRendererBackend(), m_app->GetWindow());
+    result = m_renderer->OnInit(m_context, this, m_app->GetRenderer()->GetRendererBackend(), m_app->GetWindow(0));
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
 
     using namespace std::placeholders;
@@ -51,10 +51,10 @@ C_STATUS ImGUIModule::Init(IApplication* app, float dpi)
 
 void ImGUIModule::Shutdown() noexcept
 {
-    C_STATUS Result = m_renderer->OnShutdown(m_context, m_app->GetWindow());
+    C_STATUS Result = m_renderer->OnShutdown(m_context, m_app->GetWindow(0));
     C_ASSERT_RETURN(C_SUCCEEDED(Result));
 
-    Result = m_platform->OnShutdown(m_context, m_app->GetWindow());
+    Result = m_platform->OnShutdown(m_context, m_app->GetWindow(0));
     C_ASSERT_RETURN(C_SUCCEEDED(Result));
 
     ImGui::DestroyContext(m_context);

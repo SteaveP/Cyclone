@@ -8,14 +8,14 @@
 namespace Cyclone
 {
 
-static std::vector<IModule*> g_Modules;
+static std::vector<IModule*> GModules;
 
 ENGINE_API void GEngineRegisterModule(IModule* Module)
 {
     CASSERT(Module);
     if (Module)
     {
-        g_Modules.push_back(Module);
+        GModules.push_back(Module);
 
         C_STATUS result = Module->OnRegister();
         CASSERT(C_SUCCEEDED(result));
@@ -29,14 +29,14 @@ ENGINE_API void GEngineUnRegisterModule(IModule* Module)
         C_STATUS result = Module->OnUnRegister();
         CASSERT(C_SUCCEEDED(result));
 
-        g_Modules.erase(std::remove(g_Modules.begin(), g_Modules.end(), Module), g_Modules.end());
+        GModules.erase(std::remove(GModules.begin(), GModules.end(), Module), GModules.end());
     }
 }
 
 ENGINE_API void GEngineGetModules(IModule**& Modules, uint32_t& ModulesCount)
 {
-    Modules = g_Modules.data();
-    ModulesCount = (uint32_t)g_Modules.size();
+    Modules = GModules.data();
+    ModulesCount = (uint32_t)GModules.size();
 }
 
 } // namespace Cyclone

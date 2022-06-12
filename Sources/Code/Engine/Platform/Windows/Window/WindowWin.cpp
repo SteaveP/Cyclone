@@ -55,8 +55,8 @@ void SetDPIAwareness()
 {
     // if (IsWindows10OrGreater()) // This needs a manifest to succeed. Instead we try to grab the function pointer!
     {
-        static HINSTANCE user32_dll = ::LoadLibraryA("user32.dll"); // Reference counted per-process
-        if (PFN_SetThreadDpiAwarenessContext SetThreadDpiAwarenessContextFn = (PFN_SetThreadDpiAwarenessContext)::GetProcAddress(user32_dll, "SetThreadDpiAwarenessContext"))
+        static HINSTANCE User32_dll = ::LoadLibraryA("user32.dll"); // Reference counted per-process
+        if (PFN_SetThreadDpiAwarenessContext SetThreadDpiAwarenessContextFn = (PFN_SetThreadDpiAwarenessContext)::GetProcAddress(User32_dll, "SetThreadDpiAwarenessContext"))
         {
             SetThreadDpiAwarenessContextFn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
             return;
@@ -64,8 +64,8 @@ void SetDPIAwareness()
     }
     //if (IsWindows8Point1OrGreater())
     {
-        static HINSTANCE shcore_dll = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
-        if (PFN_SetProcessDpiAwareness SetProcessDpiAwarenessFn = (PFN_SetProcessDpiAwareness)::GetProcAddress(shcore_dll, "SetProcessDpiAwareness"))
+        static HINSTANCE Shcore_dll = ::LoadLibraryA("shcore.dll"); // Reference counted per-process
+        if (PFN_SetProcessDpiAwareness SetProcessDpiAwarenessFn = (PFN_SetProcessDpiAwareness)::GetProcAddress(Shcore_dll, "SetProcessDpiAwareness"))
         {
             SetProcessDpiAwarenessFn(PROCESS_PER_MONITOR_DPI_AWARE);
             return;
@@ -75,30 +75,30 @@ void SetDPIAwareness()
     SetProcessDPIAware();
 }
 
-LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 Message, WPARAM wParam, LPARAM lParam)
 {
-    Cyclone::WindowWinApi* window = reinterpret_cast<Cyclone::WindowWinApi*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Cyclone::WindowWinApi* Window = reinterpret_cast<Cyclone::WindowWinApi*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     // #todo_window double clicking (don't forget about window style), minimizing/maximizing, esc-handling and key-modifiers handle
     // also need to properly handle ui and don't send action to core system if ui is handle key/mouse event
 
-    if (window && window->GetApp())
+    if (Window && Window->GetApp())
     {
-        IPlatform* Platform = window->GetApp()->GetPlatform();
+        IPlatform* Platform = Window->GetApp()->GetPlatform();
         if (Platform)
         {
             WindowMessageParamWin Params = {};
             Params.hWnd = hWnd;
-            Params.message = message;
+            Params.Message = Message;
             Params.wParam = wParam;
             Params.lParam = lParam;
 
-            if (Platform->OnWindowMessage(window, &Params) == C_STATUS::C_STATUS_OK)
+            if (Platform->OnWindowMessage(Window, &Params) == C_STATUS::C_STATUS_OK)
                 return 0;
         }
     }
 
-    switch (message)
+    switch (Message)
     {
     case WM_CREATE:
         {
@@ -108,25 +108,25 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
         return 0;
 
     case WM_ACTIVATE:
-        if (window)
+        if (Window)
         {
             bool active = wParam != WA_INACTIVE;
-            window->SetActive(active);
+            Window->SetActive(active);
         }
         return 0;
 
     case WM_KEYDOWN:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
             bool prevIsDown = (lParam & (1 << 30));
-            window->GetApp()->GetInputHandler()->OnKeyDown(static_cast<int>(wParam), prevIsDown);
+            Window->GetApp()->GetInputHandler()->OnKeyDown(static_cast<int>(wParam), prevIsDown);
         }
         return 0;
 
     case WM_KEYUP:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
-            window->GetApp()->GetInputHandler()->OnKeyUp(static_cast<int>(wParam));
+            Window->GetApp()->GetInputHandler()->OnKeyUp(static_cast<int>(wParam));
         }
         return 0;
 
@@ -136,64 +136,64 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
             // #todo_input check additional keys like Ctrl, Shift, Alt (GetKeyState(VK_MENU) < 0)
 
-            Cyclone::MouseKey key = Cyclone::MouseKeyLeft;
+            Cyclone::MouseKey Key = Cyclone::MouseKeyLeft;
 
-            if (message == WM_RBUTTONDOWN || message == WM_RBUTTONUP)
-                key = Cyclone::MouseKeyRight;
-            else if (message == WM_MBUTTONDOWN || message == WM_MBUTTONUP)
-                key = Cyclone::MouseKeyMiddle;
+            if (Message == WM_RBUTTONDOWN || Message == WM_RBUTTONUP)
+                Key = Cyclone::MouseKeyRight;
+            else if (Message == WM_MBUTTONDOWN || Message == WM_MBUTTONUP)
+                Key = Cyclone::MouseKeyMiddle;
 
-            bool isDown = message == WM_LBUTTONDOWN || message == WM_RBUTTONDOWN || message == WM_MBUTTONDOWN;
+            bool isDown = Message == WM_LBUTTONDOWN || Message == WM_RBUTTONDOWN || Message == WM_MBUTTONDOWN;
 
             if (isDown)
-                window->GetApp()->GetInputHandler()->OnMouseDown(key);
+                Window->GetApp()->GetInputHandler()->OnMouseDown(Key);
             else
-                window->GetApp()->GetInputHandler()->OnMouseUp(key);
+                Window->GetApp()->GetInputHandler()->OnMouseUp(Key);
         }
         return 0;
 
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
-            Cyclone::MouseKey key = GET_XBUTTON_WPARAM(wParam) == 1 ? Cyclone::MouseKeyX1 : Cyclone::MouseKeyX2;
+            Cyclone::MouseKey Key = GET_XBUTTON_WPARAM(wParam) == 1 ? Cyclone::MouseKeyX1 : Cyclone::MouseKeyX2;
 
-            bool isDown = message == WM_XBUTTONDOWN;
+            bool isDown = Message == WM_XBUTTONDOWN;
             if (isDown)
-                window->GetApp()->GetInputHandler()->OnMouseDown(key);
+                Window->GetApp()->GetInputHandler()->OnMouseDown(Key);
             else
-                window->GetApp()->GetInputHandler()->OnMouseUp(key);
+                Window->GetApp()->GetInputHandler()->OnMouseUp(Key);
 
         }
         return TRUE; // docs says that need to return TRUE
 
 #if 0
     case WM_MOUSEMOVE:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
-            POINTS point = MAKEPOINTS(lParam); // return point related to client area, can be negative
-            window->GetApp()->GetInputHandler()->OnMouseMove(point.x, point.y);
+            POINTS Point = MAKEPOINTS(lParam); // return point related to client area, can be negative
+            Window->GetApp()->GetInputHandler()->OnMouseMove(Point.x, Point.y);
         }
         return 0;
 #endif
 
     case WM_MOUSEHWHEEL:
     case WM_MOUSEWHEEL:
-        if (window && window->GetApp() && window->GetApp()->GetInputHandler())
+        if (Window && Window->GetApp() && Window->GetApp()->GetInputHandler())
         {
             short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-            float relativeDelta = (float)zDelta / (float)WHEEL_DELTA;
+            float RelativeDelta = (float)zDelta / (float)WHEEL_DELTA;
 
-            bool isVertical = message == WM_MOUSEWHEEL;
+            bool IsVertical = Message == WM_MOUSEWHEEL;
 
-            if (isVertical)
-                window->GetApp()->GetInputHandler()->OnMouseWheel(relativeDelta);
+            if (IsVertical)
+                Window->GetApp()->GetInputHandler()->OnMouseWheel(RelativeDelta);
             else
-                window->GetApp()->GetInputHandler()->OnMouseHWheel(relativeDelta);
+                Window->GetApp()->GetInputHandler()->OnMouseHWheel(RelativeDelta);
 
         }
         return 0;
@@ -201,14 +201,14 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
     case WM_DPICHANGED:
         {
             // propagate DPI to window
-            if (window)
+            if (Window)
             {
-                float newDPI = LOWORD(wParam);
-                window->OnDPIChanged(newDPI, window->GetDPI());
+                float NewDPI = LOWORD(wParam);
+                Window->OnDPIChanged(NewDPI, Window->GetDPI());
 
             }
             // resize window to suggested size with respect do DPI
-            if (window && window->ScaleWindowWithRespectToDPI())
+            if (Window && Window->ScaleWindowWithRespectToDPI())
             {
                 RECT* const prcNewWindow = (RECT*)lParam;
                 SetWindowPos(hWnd,
@@ -223,11 +223,15 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
         return 0;
 
     case WM_SIZE:
-        if (window)
+        if (Window)
         {
-            uint32 newWidth = LOWORD(lParam);
-            uint32 newHeight = HIWORD(lParam);
-            window->OnResize(newWidth, newHeight);
+            // #todo_window disable rendering if in background
+            //if (wParam != SIZE_MINIMIZED)
+            {
+                uint32 NewWidth = LOWORD(lParam);
+                uint32 NewHeight = HIWORD(lParam);
+                Window->OnResize(NewWidth, NewHeight);
+            }
         }
         return 0;
 
@@ -236,7 +240,7 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
         break;
 
     default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return DefWindowProc(hWnd, Message, wParam, lParam);
     }
     return 0;
 }
@@ -246,15 +250,15 @@ LRESULT CALLBACK CycloneWndProc(HWND hWnd, uint32 message, WPARAM wParam, LPARAM
 WindowWinApi::WindowWinApi()
     : m_hWnd(0)
     , m_hInstance(0)
-    , m_width(0)
-    , m_height(0)
-    , m_dpi(C_DEFAULT_DPI)
-    , m_windowActive(false)
-    , m_centerCursor(false)
-    , m_showCursor(true)
-    , m_pendingCursorVisibility(m_showCursor)
-    , m_scaleWindowWithRespectToDPI(false)
-    , m_app(nullptr)
+    , m_Width(0)
+    , m_Height(0)
+    , m_Dpi(C_DEFAULT_DPI)
+    , m_WindowActive(false)
+    , m_CenterCursor(false)
+    , m_ShowCursor(true)
+    , m_PendingCursorVisibility(m_ShowCursor)
+    , m_ScaleWindowWithRespectToDPI(false)
+    , m_App(nullptr)
 {
 
 }
@@ -264,13 +268,13 @@ WindowWinApi::~WindowWinApi()
     Deinit();
 }
 
-C_STATUS WindowWinApi::Init(const WindowParams* generic_params)
+C_STATUS WindowWinApi::Init(const WindowParams* GenericParams)
 {
-    const WinApiWindowParams* params = reinterpret_cast<const WinApiWindowParams*>(generic_params);
+    const WinApiWindowParams* Params = reinterpret_cast<const WinApiWindowParams*>(GenericParams);
 
-    m_app = params->app;
-    m_width = params->width;
-    m_height = params->height;
+    m_App = Params->App;
+    m_Width = Params->Width;
+    m_Height = Params->Height;
     int cmdShowFlag = SW_SHOWDEFAULT;
 
     // #todo_fixme
@@ -279,16 +283,16 @@ C_STATUS WindowWinApi::Init(const WindowParams* generic_params)
         m_hInstance = GetModuleHandle(NULL);
     }
 
-    m_windowActive = false;
+    m_WindowActive = false;
 
     SetDPIAwareness();
 
-    MultiByteToWideChar(CP_UTF8, 0, params->title.c_str(), (int)params->title.size(), szTitle, MAX_LOADSTRING);
+    MultiByteToWideChar(CP_UTF8, 0, Params->Title.c_str(), (int)Params->Title.size(), szTitle, MAX_LOADSTRING);
     wsprintf(szWindowClass, L"SampleAppWindowClass");
 
     CycloneRegisterWindowClass(m_hInstance);
 
-    if (!CycloneCreateWindow(m_hInstance, m_width, m_height, cmdShowFlag, &m_hWnd))
+    if (!CycloneCreateWindow(m_hInstance, m_Width, m_Height, cmdShowFlag, &m_hWnd))
     {
         return C_STATUS::C_STATUS_ERROR;
     }
@@ -300,26 +304,27 @@ C_STATUS WindowWinApi::Init(const WindowParams* generic_params)
     return C_STATUS::C_STATUS_OK;
 }
 
-BOOL WindowWinApi::CycloneCreateWindow(HINSTANCE hInstance, int windowWidth, int windowHeight, int nCmdShow, HWND* out_hwnd)
+BOOL WindowWinApi::CycloneCreateWindow(HINSTANCE hInstance, int WindowWidth, int WindowHeight, int nCmdShow, HWND* Out_hwnd)
 {
     DWORD dwStyle = WS_OVERLAPPEDWINDOW;
     DWORD dwExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 
-    RECT windowRect{ 0, 0, windowWidth, windowHeight };
+    RECT WindowRect{ 0, 0, WindowWidth, WindowHeight };
+
     {
         // place window at screen's center (without DPI scaling, it would be done later)
 
         // #todo here don't get into account system windows scaling
-        windowRect.left = (GetSystemMetrics(SM_CXSCREEN) - windowWidth) / 2;
-        windowRect.top = (GetSystemMetrics(SM_CYSCREEN) - windowHeight) / 2;
-        windowRect.right = windowRect.left + windowWidth;
-        windowRect.bottom = windowRect.top + windowHeight;
+        WindowRect.left = (GetSystemMetrics(SM_CXSCREEN) - WindowWidth) / 2;
+        WindowRect.top = (GetSystemMetrics(SM_CYSCREEN) - WindowHeight) / 2;
+        WindowRect.right = WindowRect.left + WindowWidth;
+        WindowRect.bottom = WindowRect.top + WindowHeight;
 
-        AdjustWindowRect(&windowRect, dwStyle, FALSE);
+        AdjustWindowRect(&WindowRect, dwStyle, FALSE);
     }
 
     HWND hWnd = CreateWindow(szWindowClass, szTitle, dwStyle,
-        windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, hInstance, this);
+        WindowRect.left, WindowRect.top, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, nullptr, nullptr, hInstance, this);
 
     if (!hWnd)
     {
@@ -327,31 +332,31 @@ BOOL WindowWinApi::CycloneCreateWindow(HINSTANCE hInstance, int windowWidth, int
     }
 
     // retrieve DPI from window (no wat to properly to know it before window creation)
-    uint32 dpi = GetDpiForWindow(hWnd);
-    m_dpi = (float)dpi;
+    uint32 Dpi = GetDpiForWindow(hWnd);
+    m_Dpi = (float)Dpi;
 
     // rescale window with respect to DPI and place to center of window
-    if (m_scaleWindowWithRespectToDPI)
+    if (false && m_ScaleWindowWithRespectToDPI)
     {
         // place window at screen's center with respect to DPI
-        windowWidth = MulDiv(windowWidth, dpi, C_DEFAULT_DPI);
-        windowHeight = MulDiv(windowHeight, dpi, C_DEFAULT_DPI);
+        WindowWidth = MulDiv(WindowWidth, Dpi, C_DEFAULT_DPI);
+        WindowHeight = MulDiv(WindowHeight, Dpi, C_DEFAULT_DPI);
 
         // #todo here don't get into account system windows scaling
-        windowRect.left = (GetSystemMetricsForDpi(SM_CXSCREEN, dpi) - windowWidth) / 2;
-        windowRect.top = (GetSystemMetricsForDpi(SM_CYSCREEN, dpi) - windowHeight) / 2;
-        windowRect.right = windowRect.left + windowWidth;
-        windowRect.bottom = windowRect.top + windowHeight;
+        WindowRect.left = (GetSystemMetricsForDpi(SM_CXSCREEN, Dpi) - WindowWidth) / 2;
+        WindowRect.top = (GetSystemMetricsForDpi(SM_CYSCREEN, Dpi) - WindowHeight) / 2;
+        WindowRect.right = WindowRect.left + WindowWidth;
+        WindowRect.bottom = WindowRect.top + WindowHeight;
 
-        AdjustWindowRectExForDpi(&windowRect, dwStyle, FALSE, dwExStyle, dpi);
-        SetWindowPos(hWnd, nullptr, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        AdjustWindowRectExForDpi(&WindowRect, dwStyle, FALSE, dwExStyle, Dpi);
+        SetWindowPos(hWnd, nullptr, WindowRect.left, WindowRect.top, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    *out_hwnd = hWnd;
+    *Out_hwnd = hWnd;
 
     return TRUE;
 }
@@ -365,37 +370,37 @@ void WindowWinApi::OnUpdate()
 {
     if (IsActive() && GetApp() && GetApp()->GetInputHandler())
     {
-        POINT point = {};
-        BOOL res = GetCursorPos(&point);
-        CASSERT(res);
+        POINT Point = {};
+        BOOL Res = GetCursorPos(&Point);
+        CASSERT(Res);
 
         // #todo_mouse need this?
-        res = ScreenToClient(m_hWnd, &point);
-        CASSERT(res);
+        Res = ScreenToClient(m_hWnd, &Point);
+        CASSERT(Res);
 
-        GetApp()->GetInputHandler()->OnMouseMove((short)point.x, (short)point.y);
+        GetApp()->GetInputHandler()->OnMouseMove((short)Point.x, (short)Point.y);
     }
 
     if (IsActive() && GetCenterCursor())
     {
         // reset mouse pos to window's center
 
-        POINT point = {};
-        point.x = m_width / 2;
-        point.y = m_height / 2;
+        POINT Point = {};
+        Point.x = m_Width / 2;
+        Point.y = m_Height / 2;
 
-        BOOL result = ClientToScreen(m_hWnd, &point);
-        CASSERT(result);
+        BOOL Result = ClientToScreen(m_hWnd, &Point);
+        CASSERT(Result);
 
-        result = SetCursorPos(point.x, point.y);
-        CASSERT(result);
+        Result = SetCursorPos(Point.x, Point.y);
+        CASSERT(Result);
     }
 
-    if (IsActive() && m_pendingCursorVisibility != m_showCursor)
+    if (IsActive() && m_PendingCursorVisibility != m_ShowCursor)
     {
         // ShowCursor use internal counter to show/hide cursor
-        m_showCursor = m_pendingCursorVisibility;
-        int counter = ShowCursor(GetShowCursor());
+        m_ShowCursor = m_PendingCursorVisibility;
+        int Counter = ShowCursor(GetShowCursor());
     }
 }
 
@@ -407,44 +412,44 @@ void WindowWinApi::OnUpdateAfter()
         if (GetApp() && GetApp()->GetInputHandler())
         {
             // inject mouse
-            GetApp()->GetInputHandler()->OnMouseMove(short(m_width / 2), short(m_height / 2));
+            GetApp()->GetInputHandler()->OnMouseMove(short(m_Width / 2), short(m_Height / 2));
         }
     }
 }
 
-void WindowWinApi::OnResize(unsigned int newWidth, unsigned int newHeight)
+void WindowWinApi::OnResize(unsigned int NewWidth, unsigned int NewHeight)
 {
-    m_width = newWidth;
-    m_height = newHeight;
+    m_Width = NewWidth;
+    m_Height = NewHeight;
 
-    if (m_app && m_app->GetRenderer())
+    if (m_App && m_App->GetRenderer())
     {
-        m_app->GetRenderer()->OnResize(this);
+        //m_App->GetRenderer()->OnResize(this);
     }
 }
 
-void WindowWinApi::OnDPIChanged(float newDPI, float oldDPI)
+void WindowWinApi::OnDPIChanged(float NewDPI, float OldDPI)
 {
-    m_dpi = newDPI;
+    m_Dpi = NewDPI;
 
     if (GetApp() && GetApp()->GetPlatform())
     {
-        GetApp()->GetPlatform()->OnDPIChanged(newDPI, oldDPI);
+        GetApp()->GetPlatform()->OnDPIChanged(NewDPI, OldDPI);
     }    
 }
 
 C_STATUS WindowWinApi::UpdateMessageQueue()
 {
-    MSG msg = {};
+    MSG Msg = {};
     
     // read all messages
-    while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) && msg.message != WM_QUIT)
+    while (PeekMessage(&Msg, nullptr, 0, 0, PM_REMOVE) && Msg.message != WM_QUIT)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
     }
 
-    bool IsExitRequested = msg.message == WM_QUIT;
+    bool IsExitRequested = Msg.message == WM_QUIT;
     return IsExitRequested ? C_STATUS::C_STATUS_SHOULD_EXIT : C_STATUS::C_STATUS_OK;
 }
 

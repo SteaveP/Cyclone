@@ -7,17 +7,17 @@ namespace Cyclone
 {
 
 DefaultInputManager::DefaultInputManager()
-    : m_app(nullptr)
-    , m_currentState{}
-    , m_pendingState{}
+    : m_App(nullptr)
+    , m_CurrentState{}
+    , m_PendingState{}
 {
 }
 
 DefaultInputManager::~DefaultInputManager() = default;
 
-C_STATUS DefaultInputManager::Init(IApplication* app)
+C_STATUS DefaultInputManager::Init(IApplication* App)
 {
-    m_app = app;
+    m_App = App;
 
     return C_STATUS::C_STATUS_OK;
 }
@@ -26,165 +26,165 @@ void DefaultInputManager::OnFrame()
 {
     // check flags
     // #todo_input #todo_fixme
-    bool isUpdateMouse      = true; //ImGui::GetIO().WantCaptureMouse == false;
-    bool isUpdateKeyboard   = true; //ImGui::GetIO().WantCaptureKeyboard == false;
+    bool IsUpdateMouse      = true; //ImGui::GetIO().WantCaptureMouse == false;
+    bool IsUpdateKeyboard   = true; //ImGui::GetIO().WantCaptureKeyboard == false;
 
     // update current state if needed
-    if (isUpdateMouse)
+    if (IsUpdateMouse)
     {
-        m_currentState.UpdateMouse(m_pendingState);
+        m_CurrentState.UpdateMouse(m_PendingState);
     }
     else
     {
-        m_currentState.ResetMouse(false);
-        m_pendingState.ResetMouse(false);
+        m_CurrentState.ResetMouse(false);
+        m_PendingState.ResetMouse(false);
     }
 
-    if (isUpdateKeyboard)
+    if (IsUpdateKeyboard)
     {
-        m_currentState.UpdateKeyboard(m_pendingState);
+        m_CurrentState.UpdateKeyboard(m_PendingState);
     }
     else
     {
-        m_currentState.ResetKeyboard();
-        m_pendingState.ResetKeyboard();
+        m_CurrentState.ResetKeyboard();
+        m_PendingState.ResetKeyboard();
     }
 
     // clear pending state
-    m_pendingState.OnFrame();
+    m_PendingState.OnFrame();
 }
 
-void DefaultInputManager::OnKeyDown(int key, bool prevKeyState)
+void DefaultInputManager::OnKeyDown(int Key, bool PrevKeyState)
 {
-    if (key >= State::MaxKeys)
+    if (Key >= State::MaxKeys)
     {
         CASSERT(false);
         return;
     }
 
-    m_pendingState.m_keysDown[key] = true;
+    m_PendingState.m_KeysDown[Key] = true;
 
-    if (prevKeyState)
-        m_pendingState.m_keysPressed[key] = false;
+    if (PrevKeyState)
+        m_PendingState.m_keysPressed[Key] = false;
     else
-        m_pendingState.m_keysPressed[key] = true;
+        m_PendingState.m_keysPressed[Key] = true;
 }
 
-void DefaultInputManager::OnKeyUp(int key)
+void DefaultInputManager::OnKeyUp(int Key)
 {
-    if (key >= State::MaxKeys)
+    if (Key >= State::MaxKeys)
     {
         CASSERT(false);
         return;
     }
 
-    m_pendingState.m_keysDown[key] = false;
-    m_pendingState.m_keysPressed[key] = false;
+    m_PendingState.m_KeysDown[Key] = false;
+    m_PendingState.m_keysPressed[Key] = false;
 }
 
-void DefaultInputManager::OnMouseDown(MouseKey key)
+void DefaultInputManager::OnMouseDown(MouseKey Key)
 {
     // #todo_input validation
-    m_pendingState.m_mouseButtons[key] = true;
+    m_PendingState.m_MouseButtons[Key] = true;
 }
 
-void DefaultInputManager::OnMouseUp(MouseKey key)
+void DefaultInputManager::OnMouseUp(MouseKey Key)
 {
     // #todo_input validation
-    m_pendingState.m_mouseButtons[key] = false;
+    m_PendingState.m_MouseButtons[Key] = false;
 }
 
-void DefaultInputManager::OnMouseMove(short x, short y)
+void DefaultInputManager::OnMouseMove(short X, short Y)
 {
-    m_pendingState.m_mouseDeltaX = x - m_pendingState.m_mouseX;
-    m_pendingState.m_mouseDeltaY = y - m_pendingState.m_mouseY;
+    m_PendingState.m_MouseDeltaX = X - m_PendingState.m_MouseX;
+    m_PendingState.m_MouseDeltaY = Y - m_PendingState.m_MouseY;
 
-    m_pendingState.m_mouseX = x;
-    m_pendingState.m_mouseY = y;
+    m_PendingState.m_MouseX = X;
+    m_PendingState.m_MouseY = Y;
 }
 
-void DefaultInputManager::InjectMousePositionDelta(short deltaX, short deltaY)
+void DefaultInputManager::InjectMousePositionDelta(short DeltaX, short DeltaY)
 {
-    m_pendingState.m_mouseDeltaX = deltaX;
-    m_pendingState.m_mouseDeltaY = deltaY;
+    m_PendingState.m_MouseDeltaX = DeltaX;
+    m_PendingState.m_MouseDeltaY = DeltaY;
 }
 
-void DefaultInputManager::OnMouseWheel(float relativeDelta)
+void DefaultInputManager::OnMouseWheel(float RelativeDelta)
 {
-    m_pendingState.m_mouseWheel = relativeDelta;
+    m_PendingState.m_MouseWheel = RelativeDelta;
 }
 
-void DefaultInputManager::OnMouseHWheel(float relativeDelta)
+void DefaultInputManager::OnMouseHWheel(float RelativeDelta)
 {
-    m_pendingState.m_mouseHWheel = relativeDelta;
+    m_PendingState.m_MouseHWheel = RelativeDelta;
 }
 
-bool DefaultInputManager::IsKeyDown(int key)
+bool DefaultInputManager::IsKeyDown(int Key)
 {
-    return m_currentState.m_keysDown[key];
+    return m_CurrentState.m_KeysDown[Key];
 }
 
-bool DefaultInputManager::IsKeyPressed(int key)
+bool DefaultInputManager::IsKeyPressed(int Key)
 {
-    return m_currentState.m_keysPressed[key];
+    return m_CurrentState.m_keysPressed[Key];
 }
 
-bool DefaultInputManager::IsMouseDown(MouseKey key)
+bool DefaultInputManager::IsMouseDown(MouseKey Key)
 {
-    return m_currentState.m_mouseButtons[key];
+    return m_CurrentState.m_MouseButtons[Key];
 }
 
-void DefaultInputManager::GetMouseCoords(short& x, short& y)
+void DefaultInputManager::GetMouseCoords(short& X, short& Y)
 {
-    x = m_currentState.m_mouseX;
-    y = m_currentState.m_mouseY;
+    X = m_CurrentState.m_MouseX;
+    Y = m_CurrentState.m_MouseY;
 }
 
-void DefaultInputManager::GetMouseCoordsDelta(short& x, short& y)
+void DefaultInputManager::GetMouseCoordsDelta(short& X, short& Y)
 {
-    x = m_currentState.m_mouseDeltaX;
-    y = m_currentState.m_mouseDeltaY;
+    X = m_CurrentState.m_MouseDeltaX;
+    Y = m_CurrentState.m_MouseDeltaY;
 }
 
 float DefaultInputManager::GetMouseWheel()
 {
-    return m_currentState.m_mouseWheel;
+    return m_CurrentState.m_MouseWheel;
 }
 
 float DefaultInputManager::GetMouseHWheel()
 {
-    return m_currentState.m_mouseHWheel;
+    return m_CurrentState.m_MouseHWheel;
 }
 
 void DefaultInputManager::State::OnFrame()
 {
     memset(m_keysPressed, 0, sizeof(m_keysPressed));
     // prev mouse pos updated in other place
-    m_mouseWheel = 0.f;
-    m_mouseHWheel = 0.f;
+    m_MouseWheel = 0.f;
+    m_MouseHWheel = 0.f;
 }
 
-void DefaultInputManager::State::UpdateMouse(const State& pendingState)
+void DefaultInputManager::State::UpdateMouse(const State& PendingState)
 {
     for (uint32 i = 0; i < MouseKeyCount; ++i)
     {
-        m_mouseButtons[i] = pendingState.m_mouseButtons[i];
+        m_MouseButtons[i] = PendingState.m_MouseButtons[i];
     }
 
-    m_mouseWheel = pendingState.m_mouseWheel;
-    m_mouseHWheel = pendingState.m_mouseHWheel;
+    m_MouseWheel = PendingState.m_MouseWheel;
+    m_MouseHWheel = PendingState.m_MouseHWheel;
 
-    m_mouseDeltaX = pendingState.m_mouseDeltaX;
-    m_mouseDeltaY = pendingState.m_mouseDeltaY;
+    m_MouseDeltaX = PendingState.m_MouseDeltaX;
+    m_MouseDeltaY = PendingState.m_MouseDeltaY;
 
-    m_mouseX = pendingState.m_mouseX;
-    m_mouseY = pendingState.m_mouseY;
+    m_MouseX = PendingState.m_MouseX;
+    m_MouseY = PendingState.m_MouseY;
 }
 
-void DefaultInputManager::State::UpdateKeyboard(const State& pendingState)
+void DefaultInputManager::State::UpdateKeyboard(const State& PendingState)
 {
-    memcpy(m_keysDown, pendingState.m_keysDown, sizeof(m_keysDown));
-    memcpy(m_keysPressed, pendingState.m_keysPressed, sizeof(m_keysPressed));
+    memcpy(m_KeysDown, PendingState.m_KeysDown, sizeof(m_KeysDown));
+    memcpy(m_keysPressed, PendingState.m_keysPressed, sizeof(m_keysPressed));
 }
 
 void DefaultInputManager::State::Reset()
@@ -193,27 +193,27 @@ void DefaultInputManager::State::Reset()
     ResetKeyboard();
 }
 
-void DefaultInputManager::State::ResetMouse(bool resetPosition)
+void DefaultInputManager::State::ResetMouse(bool ResetPosition)
 {
-    for (auto& button : m_mouseButtons)
-        button = false;
+    for (auto& Button : m_MouseButtons)
+        Button = false;
 
-    m_mouseWheel = 0;
-    m_mouseHWheel = 0;
+    m_MouseWheel = 0;
+    m_MouseHWheel = 0;
 
-    m_mouseDeltaX = 0;
-    m_mouseDeltaY = 0;
+    m_MouseDeltaX = 0;
+    m_MouseDeltaY = 0;
 
-    if (resetPosition)
+    if (ResetPosition)
     {
-        m_mouseX = 0;
-        m_mouseY = 0;
+        m_MouseX = 0;
+        m_MouseY = 0;
     }
 }
 
 void DefaultInputManager::State::ResetKeyboard()
 {
-    memset(m_keysDown, 0, sizeof(m_keysDown));
+    memset(m_KeysDown, 0, sizeof(m_KeysDown));
     memset(m_keysPressed, 0, sizeof(m_keysPressed));
 }
 

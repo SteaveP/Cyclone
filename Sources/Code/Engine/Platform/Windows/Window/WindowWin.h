@@ -12,7 +12,7 @@ class IApplication;
 struct WindowMessageParamWin
 {
     HWND hWnd;
-    UINT message;
+    UINT Message;
     WPARAM wParam;
     LPARAM lParam;
 };
@@ -29,57 +29,57 @@ public:
     WindowWinApi();
     virtual ~WindowWinApi();
 
-    virtual C_STATUS Init(const WindowParams* params) override;
+    virtual C_STATUS Init(const WindowParams* Params) override;
     virtual void Deinit() override;
 
     virtual C_STATUS UpdateMessageQueue() override;
 
     virtual void OnUpdate() override;
     virtual void OnUpdateAfter() override;
-    virtual void OnResize(unsigned int newWidth, unsigned int newHeight) override;
-    virtual void OnDPIChanged(float newDPI, float oldDPI) override;
+    virtual void OnResize(unsigned int NewWidth, unsigned int NewHeight) override;
+    virtual void OnDPIChanged(float NewDPI, float OldDPI) override;
 
-    virtual int GetWidth() const override { return m_width; }
-    virtual int GetHeight() const override { return m_height; }
+    virtual int GetWidth() const override { return m_Width; }
+    virtual int GetHeight() const override { return m_Height; }
 
     virtual PlatformWindowHandle GetPlatformWindowHandle() const override { return reinterpret_cast<PlatformWindowHandle>(m_hWnd); };
-    virtual IApplication* GetApp() const override { return m_app; }
+    virtual IApplication* GetApp() const override { return m_App; }
 
-    virtual void SetActive(bool active) override { m_windowActive = active; }
-    virtual bool IsActive() const override { return m_windowActive; }
+    virtual void SetActive(bool Active) override { m_WindowActive = Active; }
+    virtual bool IsActive() const override { return m_WindowActive; }
 
-    virtual void SetShowCursor(bool show) override { m_pendingCursorVisibility = show; }
-    virtual bool GetShowCursor() const override { return m_showCursor; }
+    virtual void SetShowCursor(bool Show) override { m_PendingCursorVisibility = Show; }
+    virtual bool GetShowCursor() const override { return m_ShowCursor; }
 
-    virtual void SetCenterCursor(bool centerCursor) override { m_centerCursor = centerCursor; }
-    virtual bool GetCenterCursor() const override{ return m_centerCursor; }
+    virtual void SetCenterCursor(bool CenterCursor) override { m_CenterCursor = CenterCursor; }
+    virtual bool GetCenterCursor() const override{ return m_CenterCursor; }
 
-    virtual float GetDPI() const { return m_dpi; }
+    virtual float GetDPI() const { return m_Dpi; }
 
-    bool ScaleWindowWithRespectToDPI() const { return m_scaleWindowWithRespectToDPI; }
+    bool ScaleWindowWithRespectToDPI() const { return m_ScaleWindowWithRespectToDPI; }
 
 
 
 protected:
-    BOOL CycloneCreateWindow(HINSTANCE, int windowWidth, int windowHeight, int, HWND* out_hwnd);
+    BOOL CycloneCreateWindow(HINSTANCE, int WindowWidth, int WindowHeight, int, HWND* Out_hwnd);
 
 protected:
     HWND m_hWnd;
     HINSTANCE m_hInstance;
 
-    int m_width;
-    int m_height;
+    int m_Width;
+    int m_Height;
 
-    float m_dpi;
+    float m_Dpi;
 
-    bool m_windowActive;
-    bool m_centerCursor;
-    bool m_showCursor;
-    bool m_pendingCursorVisibility;
+    bool m_WindowActive;
+    bool m_CenterCursor;
+    bool m_ShowCursor;
+    bool m_PendingCursorVisibility;
 
-    bool m_scaleWindowWithRespectToDPI; // #todo_config
+    bool m_ScaleWindowWithRespectToDPI; // #todo_config
 
-    IApplication* m_app;
+    IApplication* m_App;
 };
 
 } // namespace Cyclone

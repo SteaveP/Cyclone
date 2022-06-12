@@ -19,7 +19,8 @@ C_STATUS FrameBufferVk::Init(const FrameBufferVkInitInfo& InitInfo)
     framebufferInfo.height = InitInfo.Height;
     framebufferInfo.layers = InitInfo.Layers;
 
-    VkResult result = vkCreateFramebuffer(InitInfo.Backend->GetWindowContext().GetDevice(), &framebufferInfo, nullptr, &m_frameBuffer);
+    VkResult result = vkCreateFramebuffer(InitInfo.Backend->GetGlobalContext().GetLogicalDevice(InitInfo.Device).LogicalDeviceHandle,
+        &framebufferInfo, nullptr, &m_frameBuffer);
     C_ASSERT_VK_SUCCEEDED_RET(result, C_STATUS::C_STATUS_ERROR);
 
     return C_STATUS::C_STATUS_OK;

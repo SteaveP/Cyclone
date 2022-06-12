@@ -10,22 +10,22 @@ class CommandQueueVk;
 class CommandBufferVk
 {
 public:
-    C_STATUS Init(CommandQueueVk* commandQueue);
+    C_STATUS Init(CommandQueueVk* CommandQueue);
 
     void Begin();
     void End();
 
     void Reset();
 
-    VkCommandBuffer Get() const { return m_commandBuffer; }
-    VkCommandPool GetCommandPool() const { return m_commandPool; }
-    VkSemaphore GetCompletedSemaphore() const { return m_completeSemaphore; }
+    VkCommandBuffer Get() const { return m_CommandBuffer; }
+    VkCommandPool GetCommandPool() const { return m_CommandPool; }
+    VkSemaphore GetCompletedSemaphore() const { return m_CompleteSemaphore; }
 protected:
-    CommandQueueVk* m_commandQueue;
+    CommandQueueVk* m_CommandQueue;
 
-    VkCommandPool m_commandPool;
-    VkCommandBuffer m_commandBuffer;
-    VkSemaphore m_completeSemaphore;
+    VkCommandPool m_CommandPool;
+    VkCommandBuffer m_CommandBuffer;
+    VkSemaphore m_CompleteSemaphore;
 };
 
 } // namespace Cyclone::Render

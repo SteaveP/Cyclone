@@ -21,16 +21,16 @@ class IInputHandler
 public:
     virtual ~IInputHandler() = default;
 
-    virtual void OnKeyDown(int key, bool prevKeyState) = 0;
-    virtual void OnKeyUp(int key) = 0;
+    virtual void OnKeyDown(int Key, bool PrevKeyState) = 0;
+    virtual void OnKeyUp(int Key) = 0;
 
-    virtual void OnMouseDown(MouseKey key) = 0;
-    virtual void OnMouseUp(MouseKey key) = 0;
-    virtual void OnMouseMove(short x, short y) = 0;
-    virtual void InjectMousePositionDelta(short x, short y) = 0;
+    virtual void OnMouseDown(MouseKey Key) = 0;
+    virtual void OnMouseUp(MouseKey Key) = 0;
+    virtual void OnMouseMove(short X, short Y) = 0;
+    virtual void InjectMousePositionDelta(short X, short Y) = 0;
 
-    virtual void OnMouseWheel(float relativeDelta) = 0;
-    virtual void OnMouseHWheel(float relativeDelta) = 0;
+    virtual void OnMouseWheel(float RelativeDelta) = 0;
+    virtual void OnMouseHWheel(float RelativeDelta) = 0;
 };
 
 class IInputManager
@@ -40,13 +40,13 @@ public:
 
     virtual void OnFrame() = 0;
 
-    virtual bool IsKeyDown(int key) = 0;
-    virtual bool IsKeyPressed(int key) = 0;
+    virtual bool IsKeyDown(int Key) = 0;
+    virtual bool IsKeyPressed(int Key) = 0;
 
-    virtual bool IsMouseDown(MouseKey key) = 0;
+    virtual bool IsMouseDown(MouseKey Key) = 0;
 
-    virtual void GetMouseCoords(short& x, short& y) = 0;
-    virtual void GetMouseCoordsDelta(short& x, short& y) = 0;
+    virtual void GetMouseCoords(short& X, short& Y) = 0;
+    virtual void GetMouseCoordsDelta(short& X, short& Y) = 0;
 
     virtual float GetMouseWheel() = 0;
     virtual float GetMouseHWheel() = 0;

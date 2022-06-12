@@ -18,10 +18,10 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 namespace Cyclone
 {
 
-C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform* Platform, IWindow* window)
+C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform* Platform, IWindow* Window)
 {
-    m_module = UIModule;
-    CASSERT(m_module);
+    m_Module = UIModule;
+    CASSERT(m_Module);
 
     using namespace std::placeholders;
     Platform->SetOnWindowMessageCallback(std::bind(&ImGUIPlatformWin::OnWindowMessage, this, _1, _2));
@@ -30,8 +30,8 @@ C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform
     ImGuiContext* Context = reinterpret_cast<ImGuiContext*>(Instance);
     ImGui::SetCurrentContext(Context);
 
-    bool result = ImGui_ImplWin32_Init(window->GetPlatformWindowHandle());
-    C_ASSERT_RETURN_VAL(result, C_STATUS::C_STATUS_ERROR);
+    bool Result = ImGui_ImplWin32_Init(Window->GetPlatformWindowHandle());
+    C_ASSERT_RETURN_VAL(Result, C_STATUS::C_STATUS_ERROR);
 #endif
     return C_STATUS::C_STATUS_OK;
 }
@@ -57,10 +57,10 @@ C_STATUS ImGUIPlatformWin::OnWindowMessage(void* Instance, void* DataPtr)
 
     WindowMessageParamWin* Params = reinterpret_cast<WindowMessageParamWin*>(DataPtr);
 
-    LPARAM result = ImGui_ImplWin32_WndProcHandler(
-        Params->hWnd, Params->message, Params->wParam, Params->lParam);
+    LPARAM Result = ImGui_ImplWin32_WndProcHandler(
+        Params->hWnd, Params->Message, Params->wParam, Params->lParam);
 
-    return result ? C_STATUS::C_STATUS_OK : C_STATUS::C_STATUS_INVALID_ARG;
+    return Result ? C_STATUS::C_STATUS_OK : C_STATUS::C_STATUS_INVALID_ARG;
 #else
     return C_STATUS::C_STATUS_OK;
 #endif
