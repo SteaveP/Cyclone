@@ -35,23 +35,17 @@ public:
     virtual void Deinit() = 0;
 
     virtual C_STATUS BeginFrame() = 0;
+    virtual C_STATUS EndFrame() = 0;
 
     virtual C_STATUS BeginRender() = 0;
     virtual C_STATUS Render() = 0;
     virtual C_STATUS EndRender() = 0;
 
-    virtual C_STATUS EndFrame() = 0;
-
-    virtual void OnResize(const IWindow* window) = 0;
-
     virtual void WaitGPU() = 0;
 
     virtual Render::IRendererBackend* GetRendererBackend() = 0;
 
-    virtual void SetSceneRenderer(ISceneRenderer* sceneRenderer) = 0;
-
     virtual IApplication* GetApp() const = 0;
-    virtual ISceneRenderer* GetSceneRenderer() const = 0;
 };
 
 } // namespace Cyclone

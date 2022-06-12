@@ -10,7 +10,7 @@ C_STATUS CommandBufferVk::Init(CommandQueueVk* commandQueue)
 {
     m_commandQueue = commandQueue;
 
-    WindowContextVk& Context = m_commandQueue->GetBackend()->GetWindowContext();
+    WindowContextVulkan& Context = m_commandQueue->GetBackend()->GetWindowContext();
 
     // create semaphore
     VkSemaphoreCreateInfo SemaphoreInfo{};

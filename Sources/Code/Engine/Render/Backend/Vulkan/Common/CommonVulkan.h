@@ -48,7 +48,26 @@
 namespace Cyclone::Render
 {
 
+class RenderBackendVulkan;
+
+class GlobalContextVulkan;
+class WindowContextVulkan;
+
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
+using VulkanHandle = uint32;
+const VulkanHandle VulkanNullHandle = static_cast<uint32>(-1);
+
+struct DeviceHandle
+{
+    static const uint16 InvalidHandle = static_cast<uint16>(-1);
+
+    uint16 PhysicalDeviceHandle = InvalidHandle;
+    uint16 LogicalDeviceHandle = InvalidHandle;
+
+    bool IsPhysicalDeviceHandleValid() const { return PhysicalDeviceHandle != InvalidHandle; }
+    bool IsLogicalDeviceHandleValid() const { return LogicalDeviceHandle != InvalidHandle; }
+};
 
 //////////////////////////////////////////////////////////////////////////
 struct vec2

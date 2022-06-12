@@ -109,7 +109,7 @@ void DefaultApplication::DeInit()
 
     if (m_renderer)
     {
-        m_renderer->SetSceneRenderer(nullptr);
+        m_renderer->Deinit();
         m_renderer.reset();
     }
 

@@ -27,7 +27,8 @@ C_STATUS ImGUIModule::Init(IApplication* app, float dpi)
     m_context = ImGui::CreateContext();
     C_ASSERT_RETURN_VAL(m_context, C_STATUS::C_STATUS_ERROR);
 
-    //auto& io = ImGui::GetIO();
+    auto& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     ImGui::StyleColorsDark();

@@ -11,7 +11,9 @@ class CommandBufferVk;
 class CommandQueueVk
 {
 public:
-    C_STATUS Init(RenderBackendVulkan* Backend, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex);
+    CommandQueueVk() = default;
+    ~CommandQueueVk();
+    C_STATUS Init(RenderBackendVulkan* Backend, DeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex);
 
     C_STATUS OnBeginFrame();
 
@@ -27,10 +29,13 @@ public:
     uint32_t GetQueueIndex() const { return m_queueIndex; }
 
     RenderBackendVulkan* GetBackend() const { return m_backend; }
+
 public:
-    // #todo_vk should point to window context for proper device
+
     VkQueue m_queue;
     CommandQueueType m_queueType;
+
+    DeviceHandle m_Device;
 
     using CommandBufferVkPtr = std::unique_ptr<CommandBufferVk>;
     std::vector<CommandBufferVkPtr> m_freeCommandBuffers;

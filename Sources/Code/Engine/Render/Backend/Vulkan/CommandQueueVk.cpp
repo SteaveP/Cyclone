@@ -1,11 +1,13 @@
 #include "CommandQueueVk.h"
 
 #include "RenderBackendVk.h"
-#include "WindowContextVk.h"
+#include "WindowContextVulkan.h"
 #include "CommandBufferVk.h"
 
 namespace Cyclone::Render
 {
+
+CommandQueueVk::~CommandQueueVk() = default;
 
 C_STATUS CommandQueueVk::Submit(CommandBufferVk* CommandBuffers, uint32_t CommandBuffersCount, VkSemaphore WaitSemaphore, VkFence SubmitCompletedFence, bool AutoReturnToPool)
 {
@@ -73,14 +75,15 @@ void CommandQueueVk::ReturnCommandBuffer(CommandBufferVk* commandBuffer)
     // #todo_vk
 }
 
-C_STATUS CommandQueueVk::Init(RenderBackendVulkan* Backend, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
+C_STATUS CommandQueueVk::Init(RenderBackendVulkan* Backend, DeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
 {
     m_backend = Backend;
+    m_Device = Device;
     m_queueType = QueueType;
     m_queueFamilyIndex = QueueFamilyIndex;
     m_queueIndex = QueueIndex;
 
-    vkGetDeviceQueue(m_backend->GetWindowContext().GetDevice(), 
+    vkGetDeviceQueue(m_backend->GetGlobalContext().GetLogicalDevice(m_Device).LogicalDeviceHandle, 
         m_queueFamilyIndex, m_queueIndex, &m_queue);
 
     C_ASSERT_RETURN_VAL(m_queue != VK_NULL_HANDLE, C_STATUS::C_STATUS_ERROR);

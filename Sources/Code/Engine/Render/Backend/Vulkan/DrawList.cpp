@@ -11,14 +11,13 @@ namespace Cyclone::Render
 
 RenderPassVk g_renderPass;
 FrameBufferVk g_frameBuffer[MAX_FRAMES_IN_FLIGHT + 1];
-// DepthStencil!
 
 void DrawInit(RenderBackendVulkan* Backend)
 {
     {
         RenderPassVkInitInfo RPInitInfo{};
 
-        VkFormat ColorFormat = Backend->GetWindowContext().m_swapchainImageFormat;
+        VkFormat ColorFormat = Backend->GetWindowContext().GetSwapchainImageFormat();
 
         RPInitInfo.ColorAttachmentCount = 1;
         VkAttachmentDescription& ColorAttachment = RPInitInfo.ColorAttachment[0];
@@ -61,13 +60,13 @@ void DrawInit(RenderBackendVulkan* Backend)
         FrameBufferVkInitInfo FBInitInfo{};
         FBInitInfo.Backend = Backend;
         FBInitInfo.RenderPass = &g_renderPass;
-        FBInitInfo.Width = Backend->GetWindowContext().m_swapchainExtent.width;
-        FBInitInfo.Height = Backend->GetWindowContext().m_swapchainExtent.height;
+        FBInitInfo.Width = Backend->GetWindowContext().GetSwapchainExtent().width;
+        FBInitInfo.Height = Backend->GetWindowContext().GetSwapchainExtent().height;
         FBInitInfo.Layers = 1;
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT + 1; ++i)
         {
-            FBInitInfo.Attachments[0] = Backend->GetWindowContext().m_swapchainImageViews[i];// Backend->GetWindowContext().m_currentFrame];
+            FBInitInfo.Attachments[0] = Backend->GetWindowContext().GetSwapchainImageView(i);// Backend->GetWindowContext().m_currentFrame];
             FBInitInfo.AttachmentsCount = 1;// 2;
 
             C_STATUS Result = g_frameBuffer[i].Init(FBInitInfo);
@@ -78,7 +77,6 @@ void DrawInit(RenderBackendVulkan* Backend)
 
 void Draw(RenderBackendVulkan* Backend)
 {
-    //return;
     // fill command buffers
     CommandQueueVk* CommandQueue = Backend->GetWindowContext().GetCommandQueue(CommandQueueType::Graphics);
     CASSERT(CommandQueue);
@@ -90,9 +88,9 @@ void Draw(RenderBackendVulkan* Backend)
 
     {
         RenderPassVkBeginInfo RPBeginInfo{};
-        RPBeginInfo.FrameBuffer = &g_frameBuffer[Backend->GetWindowContext().m_currentImageIndex];
+        RPBeginInfo.FrameBuffer = &g_frameBuffer[Backend->GetWindowContext().GetCurrentImageIndex()];
         RPBeginInfo.RenderArea.offset = { 0, 0 };
-        RPBeginInfo.RenderArea.extent = Backend->GetWindowContext().m_swapchainExtent;
+        RPBeginInfo.RenderArea.extent = Backend->GetWindowContext().GetSwapchainExtent();
         RPBeginInfo.ClearColors[0].color = { 0.f, 0.86f, 0.31f, 1.f };
         RPBeginInfo.ClearColors[1].depthStencil = { 1.0f, 0 };
         RPBeginInfo.ClearColorsCount = 1;// 2;

@@ -13,6 +13,13 @@ protected:
 	C_STATUS OnUpdateUI() override;
 	C_STATUS OnInit() override;
 
+protected:
+	void ShowMenu();
+	void ShowViewport();
+	void ShowWorldOutliner();
+	void ShowProperties();
+	void ShowContentBrowser();
+
 };
 
 } // namespace Cyclone

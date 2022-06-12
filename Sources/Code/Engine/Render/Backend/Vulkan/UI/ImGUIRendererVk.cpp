@@ -42,11 +42,11 @@ namespace Cyclone::Render
         C_ASSERT_RETURN_VAL(m_pimpl->Backend, C_STATUS::C_STATUS_INVALID_ARG);
 
         RenderBackendVulkan* Backend = m_pimpl->Backend;
-        WindowContextVk& WindowContext = Backend->GetWindowContext();
+        WindowContextVulkan& WindowContext = Backend->GetWindowContext();
         {
             RenderPassVkInitInfo RPInitInfo{};
 
-            VkFormat ColorFormat = WindowContext.m_swapchainImageFormat;
+            VkFormat ColorFormat = WindowContext.GetSwapchainImageFormat();
 
             RPInitInfo.ColorAttachmentCount = 1;
             VkAttachmentDescription& ColorAttachment = RPInitInfo.ColorAttachment[0];
@@ -89,14 +89,14 @@ namespace Cyclone::Render
             FrameBufferVkInitInfo FBInitInfo{};
             FBInitInfo.Backend = Backend;
             FBInitInfo.RenderPass = &m_pimpl->RenderPassUI;
-            FBInitInfo.Width = WindowContext.m_swapchainExtent.width;
-            FBInitInfo.Height = WindowContext.m_swapchainExtent.height;
+            FBInitInfo.Width = WindowContext.GetSwapchainExtent().width;
+            FBInitInfo.Height = WindowContext.GetSwapchainExtent().height;
             FBInitInfo.Layers = 1;
 
-            m_pimpl->FrameBufferUI.resize(WindowContext.m_swapchainImageViews.size());
+            m_pimpl->FrameBufferUI.resize(WindowContext.GetSwapchainImageViewCount());
             for (uint32_t i = 0; i < m_pimpl->FrameBufferUI.size(); ++i)
             {
-                FBInitInfo.Attachments[0] = WindowContext.m_swapchainImageViews[i];
+                FBInitInfo.Attachments[0] = WindowContext.GetSwapchainImageView(i);
                 FBInitInfo.AttachmentsCount = 1;
 
                 C_STATUS Result = m_pimpl->FrameBufferUI[i].Init(FBInitInfo);
@@ -117,9 +117,9 @@ namespace Cyclone::Render
         InitInfo.PipelineCache = VK_NULL_HANDLE;
         InitInfo.DescriptorPool = Backend->GetDescriptorPool();
         InitInfo.Subpass = 0;
-        InitInfo.MinImageCount = WindowContext.m_minSwapchainImageCount;
-        InitInfo.ImageCount = (uint32_t)WindowContext.m_swapchainImages.size();
-        InitInfo.MSAASamples = WindowContext.m_currentMsaaSamples;
+        InitInfo.MinImageCount = WindowContext.GetMinSwapchainImageCount();
+        InitInfo.ImageCount = (uint32_t)WindowContext.GetSwapchainImageViewCount();
+        InitInfo.MSAASamples = WindowContext.GetCurrentMsaaSamples();
 
         bool Result = ImGui_ImplVulkan_Init(&InitInfo, m_pimpl->RenderPassUI.Get());
         C_ASSERT_RETURN_VAL(Result, C_STATUS::C_STATUS_ERROR);
@@ -164,7 +164,7 @@ namespace Cyclone::Render
         //PROFILE_GPU_SCOPED_EVENT(commandList->GetCommandList(), "ImGUI Render");
 
         RenderBackendVulkan* Backend = m_pimpl->Backend;
-        WindowContextVk& WindowContext = Backend->GetWindowContext();
+        WindowContextVulkan& WindowContext = Backend->GetWindowContext();
 
         CommandQueueVk* CommandQueue = WindowContext.GetCommandQueue(CommandQueueType::Graphics);
         CASSERT(CommandQueue);
@@ -176,9 +176,9 @@ namespace Cyclone::Render
 
         {
             RenderPassVkBeginInfo RPBeginInfo{};
-            RPBeginInfo.FrameBuffer = &m_pimpl->FrameBufferUI[WindowContext.m_currentImageIndex];
+            RPBeginInfo.FrameBuffer = &m_pimpl->FrameBufferUI[WindowContext.GetCurrentImageIndex()];
             RPBeginInfo.RenderArea.offset = { 0, 0 };
-            RPBeginInfo.RenderArea.extent = WindowContext.m_swapchainExtent;
+            RPBeginInfo.RenderArea.extent = WindowContext.GetSwapchainExtent();
 
             m_pimpl->RenderPassUI.Begin(CommandBuffer, RPBeginInfo);
         }
@@ -189,14 +189,7 @@ namespace Cyclone::Render
 
         CommandBuffer->End();
 
-        // submit
-#if 1
-        CommandQueue->Submit(CommandBuffer, 1,
-            WindowContext.m_imageAvailabeSemaphores[WindowContext.m_currentFrame],
-            WindowContext.m_inflightFences[WindowContext.m_currentFrame], true);
-#else
         CommandQueue->Submit(CommandBuffer, 1, VK_NULL_HANDLE, VK_NULL_HANDLE, true);
-#endif
 #endif
 
         return C_STATUS::C_STATUS_OK;
