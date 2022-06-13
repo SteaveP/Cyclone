@@ -205,7 +205,11 @@ function SetupDefaultWorkspaceState()
         AppPath("Sources/"),
         AppPath("Sources/Code/"),
     })
-
+    
+    disablewarnings {
+        "4251", --  Warning C4251 about cross-DLL exported STD types like vectors or ptrs: class needs to have dll-interface to be used by clients of struct
+    }
+    
     -- for convenience
     -- files { AppPath("GenerateSolutionWinVS.bat") }
     -- filter { "files:**.bat" }

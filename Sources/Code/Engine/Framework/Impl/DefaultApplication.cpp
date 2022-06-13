@@ -39,6 +39,8 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
         return C_STATUS::C_STATUS_INVALID_ARG;
     }
 
+    C_STATUS Result = C_STATUS::C_STATUS_OK;
+
     // Executable runs from from <RootDir>/Bin to load binary dependencies (.dlls) from that folder
     // After that, need to change directory to <RootDir> to be able to reference assets and other project's files
     m_Platform->ChangeWorkingDirectory("..");
@@ -61,7 +63,7 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
 
     if (m_InputManager)
     {
-        C_STATUS Result = m_InputManager->Init(this);
+        Result = m_InputManager->Init(this);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
@@ -86,25 +88,27 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
 
     if (m_Renderer)
     {
-        RendererDesc RendererDesc = RendererDesc
-            .SetApplication(this)
-            .SetWindow(m_Windows[0].get())
+        Vector<IWindow*> Windows(m_Windows.size());
+        for (uint32 i = 0; i < Windows.size(); ++i)
+            Windows[i] = m_Windows[i].get();
+
+        RendererDesc RendererDesc = RendererDesc;
+            RendererDesc.SetApplication(this)
+            .SetWindows(std::move(Windows))
             .SetFrameCount(2);
 
-        C_STATUS Result = m_Renderer->Init(&RendererDesc);
+        Result = m_Renderer->Init(&RendererDesc);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     if (m_UI)
     {
-        C_STATUS Result = m_UI->Init(this);
+        Result = m_UI->Init(this);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
-    {
-        C_STATUS Result = OnInit();
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
-    }
+    Result = OnInit();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
     return C_STATUS::C_STATUS_OK;
 }
@@ -306,7 +310,6 @@ C_STATUS DefaultApplication::EndFrame()
 
 C_STATUS DefaultApplication::OnInit()
 {
-    // do nothing
     return C_STATUS::C_STATUS_OK;
 }
 

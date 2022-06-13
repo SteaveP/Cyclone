@@ -2,13 +2,12 @@
 
 #include "Engine/Core/Helpers.h"
 
-#include <vector>
 #include <algorithm>
 
 namespace Cyclone
 {
 
-static std::vector<IModule*> GModules;
+static Vector<IModule*> GModules;
 
 ENGINE_API void GEngineRegisterModule(IModule* Module)
 {

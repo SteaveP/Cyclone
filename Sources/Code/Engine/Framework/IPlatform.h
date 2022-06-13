@@ -8,9 +8,6 @@
 namespace Cyclone
 {
 
-class IWindow;
-
-
 class ENGINE_API IPlatform
 {
 public:
@@ -21,7 +18,7 @@ public:
 public:
     virtual ~IPlatform() = default;
 
-    virtual WindowPtr CreateWindowPtr() = 0;
+    virtual UniquePtr<IWindow> CreateWindowPtr() = 0;
 
     virtual void ChangeWorkingDirectory(std::string_view path) = 0;
 

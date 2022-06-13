@@ -12,7 +12,7 @@ namespace Cyclone
 
 int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback)
 {
-    std::shared_ptr<DefaultApplication> App{};
+    Ptr<DefaultApplication> App{};
     DefaultApplicationParams Params{};
 
     if (EntryCallback)
@@ -20,11 +20,11 @@ int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainE
         EntryCallback(argc, argv, PlatformDataPtr, App, Params);
     }
 
-    std::shared_ptr<Render::Renderer> DefaultRenderer = std::make_shared<Render::Renderer>();
+    Ptr<Render::Renderer> DefaultRenderer = std::make_shared<Render::Renderer>();
     DefaultRenderer->PreInit(GEngineGetCurrentRenderBackend());
 
     Params.Platform = GEngineGetCurrentPlatform();
-    Params.Renderer = DefaultRenderer;
+    Params.Renderer = std::move(DefaultRenderer);
     Params.InputManager = std::make_shared<DefaultInputManager>();
     Params.UIModule = GEngineGetCurrentUIModule();
     Params.PlatformStartupDataPtr = PlatformDataPtr;

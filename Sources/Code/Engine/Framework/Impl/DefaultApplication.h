@@ -2,9 +2,8 @@
 
 #include "Engine/EngineModule.h"
 #include "Engine/Framework/IApplication.h"
+#include "Engine/Framework/IWindow.h"
 #include "Engine/Engine.h"
-
-#include <vector>
 
 namespace Cyclone
 {
@@ -16,8 +15,8 @@ struct ENGINE_API DefaultApplicationParams
     IPlatform* Platform = nullptr;
     IUIModule* UIModule = nullptr;
     uint32 WindowsCount = 1;
-    std::shared_ptr<IRenderer> Renderer;
-    std::shared_ptr<DefaultInputManager> InputManager;
+    Ptr<IRenderer> Renderer;
+    Ptr<DefaultInputManager> InputManager;
 
     void* PlatformStartupDataPtr = nullptr; // #todo_fixme
     std::string WindowCaption;
@@ -73,9 +72,9 @@ protected:
     IPlatform* m_Platform;
     IUIModule* m_UI;
 
-    std::vector<std::shared_ptr<IWindow>> m_Windows;
-    std::shared_ptr<IRenderer> m_Renderer;
-    std::shared_ptr<DefaultInputManager> m_InputManager;
+    Vector<Ptr<IWindow>> m_Windows;
+    Ptr<IRenderer> m_Renderer;
+    Ptr<DefaultInputManager> m_InputManager;
 };
 
 } // namespace Cyclone

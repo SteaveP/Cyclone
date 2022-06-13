@@ -1,15 +1,13 @@
 #pragma once
 
-// default mega header
+// Default mega header
 
 #include "EngineModule.h"
 
 #include "Core/Types.h"
 #include "Core/Helpers.h"
 
-// default includes
-#include <string>
-#include <memory>
+// Default includes
 
 
 namespace Cyclone

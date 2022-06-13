@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/EngineModule.h"
 #include "Engine/Core/Types.h"
 
 namespace Cyclone
@@ -12,9 +13,10 @@ class IInputManager;
 class IInputHandler;
 class IUIModule;
 
-class IApplication
+class ENGINE_API IApplication
 {
 public:
+    IApplication() = default;
     virtual ~IApplication() = default;
 
     virtual int Run() = 0;

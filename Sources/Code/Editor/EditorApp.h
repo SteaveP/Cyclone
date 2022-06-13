@@ -2,8 +2,22 @@
 
 #include "Engine/Framework/Impl/DefaultApplication.h"
 
+
+#include "Engine/Scene/Camera.h"
+#include "Engine/Core/Math.h"
+
 namespace Cyclone
 {
+
+struct CViewport
+{
+	Ptr<IWindow> Window;
+	// viewport in window in pixels
+    Vec2 UpperLeftCorner;
+    Vec2 BottomRightCorner;
+	
+	CCameraPtr Camera;
+};
 
 class EditorApplication : public DefaultApplication
 {
@@ -15,11 +29,13 @@ protected:
 
 protected:
 	void ShowMenu();
-	void ShowViewport();
+	void ShowViewports();
 	void ShowWorldOutliner();
 	void ShowProperties();
 	void ShowContentBrowser();
 
+protected:
+	Vector<CViewport> m_Viewports;
 };
 
 } // namespace Cyclone

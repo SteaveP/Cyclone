@@ -18,7 +18,7 @@ function IncludeEnginePlatforms()
 		}
 
 		-- ImGui platform integration
-		IncludeImGuiReference()
+		AddImGuiDependency()
 		files {
 			SourcesPath("ThirdParty/ImGui/backends/imgui_impl_win32.h"),
 			SourcesPath("ThirdParty/ImGui/backends/imgui_impl_win32.cpp")

@@ -9,7 +9,7 @@ namespace Cyclone
 class PLATFORMWIN_API PlatformWin : public IPlatform
 {
 public:
-    virtual WindowPtr CreateWindowPtr() override;
+    virtual UniquePtr<IWindow> CreateWindowPtr() override;
 
     virtual void ChangeWorkingDirectory(std::string_view Path) override;
 

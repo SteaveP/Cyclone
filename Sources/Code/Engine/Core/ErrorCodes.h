@@ -10,7 +10,7 @@ enum class C_STATUS
     C_STATUS_INVALID_ARG = 2,
     C_STATUS_SHOULD_EXIT = 3,
 
-    C_RESULT_COUNT
+    C_STATUS_COUNT
 };
 
 #define C_SUCCEEDED(res) ((res) == Cyclone::C_STATUS::C_STATUS_OK || (res) == Cyclone::C_STATUS::C_STATUS_SHOULD_EXIT)

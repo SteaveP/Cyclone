@@ -10,7 +10,7 @@
 #endif
 
 Cyclone::MainEntryCallback MainCallback = [](int argc, char* argv[], void* PlatformDataPtr,
-    std::shared_ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
+    Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
 {
     C_UNREFERENCED(argc);
     C_UNREFERENCED(argv);

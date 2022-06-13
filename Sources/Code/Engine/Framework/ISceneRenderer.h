@@ -1,9 +1,6 @@
 #pragma once
 
-#include <memory>
-
-//#include "Engine/Render/ForwardDeclarations.h"
-//#include "Engine/Utils/ErrorCodes.h"
+#include "Engine/Core/Types.h"
 
 namespace Cyclone
 {
@@ -32,14 +29,14 @@ public:
     virtual C_STATUS Render() = 0;
     virtual void OnResize(const IWindow* window) = 0;
 
-    virtual void SetScene(std::shared_ptr<Scene> scene) = 0;
+    virtual void SetScene(Ptr<Scene> scene) = 0;
 
     //virtual void OnStaticMeshAdded(RenderScene* renderScene, RenderStaticMeshInstancePtr instance) = 0;
     //virtual void OnStaticMeshRemoved(RenderScene* renderScene, RenderStaticMeshInstancePtr instance) = 0;
     //
     //virtual IRenderer* GetRenderer() const = 0;
     //virtual RenderScene* GetRenderScene() const = 0;
-    //virtual std::shared_ptr<Scene> GetScene() const = 0;
+    //virtual Ptr<Scene> GetScene() const = 0;
 };
 
 } // namespace Cyclone

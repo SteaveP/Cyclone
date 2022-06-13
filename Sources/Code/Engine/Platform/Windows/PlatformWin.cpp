@@ -8,7 +8,7 @@
 namespace Cyclone
 {
 
-Cyclone::WindowPtr PlatformWin::CreateWindowPtr()
+UniquePtr<IWindow> PlatformWin::CreateWindowPtr()
 {
     return std::make_unique<WindowWinApi>();
 }

@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <string>
+#include <memory>
+#include <vector>
 
 namespace Cyclone
 {
@@ -18,6 +20,16 @@ using uint32 = uint32_t;
 using int64 = int64_t;
 using uint64 = uint64_t;
 
-using string = std::string;
+using String = std::string;
+
+template<typename T>
+using Ptr = std::shared_ptr<T>;
+
+template<typename T>
+using UniquePtr = std::unique_ptr<T>;
+
+template<typename T>
+using Vector = std::vector<T>;
+
 
 } // namespace Cyclone

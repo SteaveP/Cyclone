@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/EngineModule.h"
+#include "Engine/Core/Types.h"
 #include <functional>
 
 namespace Cyclone
@@ -9,7 +10,7 @@ namespace Cyclone
 class DefaultApplication;
 struct DefaultApplicationParams;
 
-using MainEntryCallback = std::function<void(int, char*[], void* PlatformDataPtr, std::shared_ptr<DefaultApplication>& App, DefaultApplicationParams& AppParams)>;
+using MainEntryCallback = std::function<void(int, char*[], void* PlatformDataPtr, Ptr<DefaultApplication>& App, DefaultApplicationParams& AppParams)>;
 
 ENGINE_API int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback);
 

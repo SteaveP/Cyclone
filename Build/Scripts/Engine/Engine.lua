@@ -5,6 +5,17 @@ include "Render/Render.lua"
 -- should be used for internal engine's libs like platforms or render backends
 function AddEngineDependencyInternal()
 	links "Engine"
+	
+	-- #todo do this only if Engine was build as SharedLib (need to check Premake sources to see how to do it)
+	--defines { "IMGUI_API=__declspec(dllimport)" }
+	defines { "IMGUI_IMPL_API=" }
+end
+
+function AddImGuiDependency(WithLinks)
+	includedirs {
+		SourcesPath("ThirdParty/ImGui/"),
+		SourcesPath("ThirdParty/ImGuiFileDialog/3rdparty/dirent/include"),
+	}
 end
 
 -- shound be used for external projects like Editor that want to fully include the Engine
@@ -12,27 +23,25 @@ function AddEngineDependency()
 	AddEngineDependencyInternal()	
 	AddPlatformsDependency()
 	AddRendersDependency()
-	IncludeImGuiReference()
+	AddImGuiDependency()
 end
 
-function IncludeImGuiReference()
-	includedirs {
-		SourcesPath("ThirdParty/ImGui/"),
-		SourcesPath("ThirdParty/ImGuiFileDialog/3rdparty/dirent/include"),
-	}
-end
-
+-- #todo move to separate project and link to others
 function IncludeImGui()
-	IncludeImGuiReference()
+	AddImGuiDependency()
 
+	filter "kind:SharedLib"
+		defines { "IMGUI_API=__declspec(dllexport)" }
+	filter {}
+		
 	filter { "toolset:msc*" }
 		files { SourcesPath("ThirdParty/ImGui/misc/natvis/*.natvis")}
 	filter {}
 
 	files {
 		-- intergration
-		SourcesPath("ThirdpartyIntegration/ImGui/**.h"),
-		SourcesPath("ThirdpartyIntegration/ImGui/**.cpp"),
+		-- SourcesPath("ThirdpartyIntegration/ImGui/**.h"),
+		-- SourcesPath("ThirdpartyIntegration/ImGui/**.cpp"),
 		-- imgui
 		SourcesPath("ThirdParty/ImGui/imconfig.h"),
 		SourcesPath("ThirdParty/ImGui/imgui.h"),
@@ -83,6 +92,8 @@ function IncludeEngine()
 				PushGroup "Render"
 					IncludeEngineRender()
 				PopGroup()
+
+				IncludeImGui()
 			PopGroup()
-		PopGroup()
+	PopGroup()
 end

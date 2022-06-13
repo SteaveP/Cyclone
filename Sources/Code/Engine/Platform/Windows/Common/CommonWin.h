@@ -6,16 +6,10 @@
 #define NOMINMAX
 #include <windows.h>
 
-// C libs
-//#include <stdlib.h>
-//#include <malloc.h>
-//#include <tchar.h>
-
-// C++ libs
-#include <memory>
+// Engine
+#include "Engine/Engine.h"
+#include "Engine/Core/Types.h"
 
 // This module
 #include "Engine/Platform/Windows/PlatformWinModule.h"
 
-// Engine
-#include "Engine/Engine.h"

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Engine/Core/ErrorCodes.h"
-
-#include <string>
-#include <memory>
+#include "Engine/Core/Types.h"
 
 namespace Cyclone
 {
@@ -16,7 +14,7 @@ struct WindowParams
     int Width;
     int Height;
 
-    std::string Title;
+    String Title;
 };
 
 typedef void* PlatformWindowHandle;
@@ -53,7 +51,5 @@ public:
 
     virtual float GetDPI() const = 0;
 };
-
-using WindowPtr = std::unique_ptr<IWindow>;
 
 } // namespace Cyclone

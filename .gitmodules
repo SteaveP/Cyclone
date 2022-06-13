@@ -14,11 +14,15 @@
 	path = Sources/ThirdParty/EnTT
 	branch = master
 	url = https://github.com/skypjack/entt.git
-[submodule "Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator"]
-	path = Sources/ThirdParty/Render/BackendVulkan/VulkanMemoryAllocator
+[submodule "Sources/ThirdParty/Render/Vulkan/VulkanMemoryAllocator"]
+	path = Sources/ThirdParty/Render/Vulkan/VulkanMemoryAllocator
 	branch = master
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
 [submodule "Sources/ThirdParty/ImGui"]
 	path = Sources/ThirdParty/ImGui
 	branch = docking
 	url = https://github.com/ocornut/imgui.git
+[submodule "Sources/ThirdParty/Render/DX12/D3D12MemoryAllocator"]
+	path = Sources/ThirdParty/Render/DX12/D3D12MemoryAllocator
+	branch = master
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git

@@ -23,7 +23,7 @@ public:
 ENGINE_API void GEngineRegisterModule(IModule* Module);
 ENGINE_API void GEngineUnRegisterModule(IModule* Module);
 
-// don't use std::vectors as export functions
+// don't use Vectors as export functions
 ENGINE_API void GEngineGetModules(IModule**& Modules, uint32_t& ModulesCount);
 
 template<typename T>

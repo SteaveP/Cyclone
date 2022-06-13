@@ -1,12 +1,14 @@
 #include "Engine/Engine.h"
 #include "EditorApp.h"
 
-#define APPLICATION_CRATE_CALLBACK [](int argc, char* argv[], void* PlatformDataPtr, \
-            std::shared_ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams) \
-{ \
-    App = std::make_shared<Cyclone::EditorApplication>(); \
-    AppParams.WindowCaption = "Cyclone's Editor"; \
-}
+static auto AppCreateCallback = [](int argc, char* argv[], void* PlatformDataPtr,
+    Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
+{
+    App = std::make_shared<Cyclone::EditorApplication>();
+    AppParams.WindowCaption = "Cyclone's Editor";
+};
+
+#define APPLICATION_CRATE_CALLBACK AppCreateCallback
 
 #define GENERATE_MAIN_FUNCTION 1
 #define GENERATE_DEFAULT_MODULE_LOADER 1

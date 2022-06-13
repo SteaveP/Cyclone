@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Engine/Core/Helpers.h"
 
 #ifdef DYNAMIC_LIB

@@ -1,13 +1,30 @@
 #include "EditorApp.h"
 
 #include "Engine/UI/CommonUI.h"
+#include "Engine/Framework/IWindow.h"
 
 namespace Cyclone
 {
 
-
 C_STATUS EditorApplication::OnInit()
 {
+    // #todo_editor refactor
+    uint32 ViewportsCount = 2;
+
+    CASSERT(m_Windows.size() > 0);
+    Ptr<IWindow> Window = m_Windows[0];
+
+    m_Viewports.resize(ViewportsCount);
+    for (uint32 i = 0; i < m_Viewports.size(); ++i)
+    {
+        auto& Viewport = m_Viewports[i];
+
+        Viewport.Window = Window;
+        Viewport.UpperLeftCorner = Vec2{ 100.f, 100.f };
+        Viewport.BottomRightCorner = Vec2{ Window->GetWidth() - 100.f, Window->GetHeight() - 100.f};
+        Viewport.Camera = std::make_shared<CCamera>();
+    }
+
     return C_STATUS::C_STATUS_OK;
 }
 
@@ -27,7 +44,7 @@ C_STATUS EditorApplication::OnUpdateUI()
 
     ShowMenu();
 
-    ShowViewport();
+    ShowViewports();
     ShowWorldOutliner();
     ShowProperties();
     ShowContentBrowser();
@@ -108,7 +125,7 @@ void EditorApplication::ShowMenu()
     }
 }
 
-void EditorApplication::ShowViewport()
+void EditorApplication::ShowViewports()
 {
 //     const ImGuiViewport* viewport = ImGui::GetMainViewport();
 //     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -117,10 +134,16 @@ void EditorApplication::ShowViewport()
 //     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 //     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-    if (ImGui::Begin("Viewport"))
+
+    for (uint32 i = 0; i < m_Viewports.size(); ++i)
     {
+        auto& Viewport = m_Viewports[i];
+        String WindowName = "Viewport " + std::to_string(i);
+        if (ImGui::Begin(WindowName.c_str()))
+        {
+        }
+        ImGui::End();
     }
-    ImGui::End();
 }
 
 void EditorApplication::ShowWorldOutliner()
