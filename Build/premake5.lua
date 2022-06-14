@@ -7,9 +7,6 @@ local workspaceExtension = ".sln"
 workspace(workspaceName)
     location(AppPath(""))
 
-    -- temp workaround 
-    os.mkdir(AppPath("Bin"))
-
     startproject "Editor"
     defaultplatform "Win64_Vulkan"
 

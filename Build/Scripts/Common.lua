@@ -132,6 +132,9 @@ function SetupDefaultWorkspaceState()
     cppdialect "c++17"
     staticruntime "Off"
 
+    -- temp workaround
+    os.mkdir(AppPath("Bin"))
+
     -- copy pdb's and exe to output dir!
 
     -- exceptionhandling

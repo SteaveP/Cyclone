@@ -1,11 +1,4 @@
-local function AddD3D12MemoryAllocator(bHeaderOnly)
-	-- D3D12 Memory Allocator
-	if not bHeaderOnly then
-		files {
-			SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/include/D3D12MemAlloc.h"),
-			SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"),
-		}
-	end
+local function AddD3D12MemoryAllocatorDependency()
 	includedirs { SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/include") }
 end
 
@@ -22,8 +15,6 @@ function IncludeEngineRenderPlatformDX12()
 			files {
 				EnginePath("Render/Backend/DX12/**.h"),
 				EnginePath("Render/Backend/DX12/**.cpp"),
-				EnginePath("Render/Backend/DX12/Raytracing/*.h"),
-				EnginePath("Render/Backend/DX12/Raytracing/*.cpp"),
 			}
 
 			vpaths {
@@ -35,6 +26,7 @@ function IncludeEngineRenderPlatformDX12()
 				files { SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/**.natvis")}
 			filter {}
 			
+			includedirs { EnginePath("Render/Backend/DX12") }
 			
 			-- ImGui Renderer
 			AddImGuiDependency()
@@ -44,7 +36,12 @@ function IncludeEngineRenderPlatformDX12()
 			}	
 			vpaths { ["Code/UI/ImGui/*"] = { SourcesPath("ThirdParty/ImGui**") } }		
 
-			AddD3D12MemoryAllocator(false)
+			-- D3D12 Memory Allocator
+			AddD3D12MemoryAllocatorDependency()
+			files {
+				SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/include/D3D12MemAlloc.h"),
+				SourcesPath("Thirdparty/Render/DX12/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp"),
+			}
 
 			-- #TODO refactor links
 			links { "d3d12", "dxgi", "dxguid" }

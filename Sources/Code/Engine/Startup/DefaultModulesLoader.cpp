@@ -13,12 +13,10 @@
 
 #if RENDER_BACKEND_VULKAN
 #include "Engine/Render/Backend/Vulkan/RenderBackendVulkanModule.h"
-#include "Engine/Render/Backend/Vulkan/UI/ImGUIRendererVulkan.h"
 #endif
 
 #if RENDER_BACKEND_DX12
 #include "Engine/Render/Backend/DX12/RenderBackendDX12Module.h"
-#include "Engine/Render/Backend/DX12/UI/ImGUIRendererDX12.h"
 #endif
 
 Cyclone::MainEntryCallback LoadModuleMainCallback = [](int argc, char* argv[], void* PlatformDataPtr,
@@ -29,6 +27,7 @@ Cyclone::MainEntryCallback LoadModuleMainCallback = [](int argc, char* argv[], v
     C_UNREFERENCED(PlatformDataPtr);
 
     Cyclone::ImGUIModule* ImGUIModulePtr = new Cyclone::ImGUIModule();
+    ImGUIModulePtr->SetRenderer(Cyclone::CreateImGUIRenderer());
     Cyclone::GEngineSetCurrentUIModule(ImGUIModulePtr);
 
 #if PLATFORM_WIN64
@@ -38,12 +37,10 @@ Cyclone::MainEntryCallback LoadModuleMainCallback = [](int argc, char* argv[], v
 
 #if RENDER_BACKEND_VULKAN
     Cyclone::GEngineRegisterModule(new Cyclone::RenderBackendVulkanModule());
-    ImGUIModulePtr->SetRenderer(new Cyclone::Render::ImGUIRendererVulkan());
 #endif
 
 #if RENDER_BACKEND_DX12
     Cyclone::GEngineRegisterModule(new Cyclone::RenderBackendDX12Module());
-    ImGUIModulePtr->SetRenderer(new Cyclone::Render::ImGUIRendererDX12());
 #endif
 };
 
