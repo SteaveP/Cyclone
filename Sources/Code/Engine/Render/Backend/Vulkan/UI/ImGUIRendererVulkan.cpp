@@ -43,12 +43,12 @@ C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, 
     RenderBackendVulkan* Backend = m_pimpl->Backend;
     WindowContextVulkan* WindowContext = static_cast<WindowContextVulkan*>(Backend->GetRenderer()->GetWindowContext(m_Window));
     {
-        Ptr<RenderPassVkInitInfo> RPInitInfo = std::make_shared<RenderPassVkInitInfo>();
+        RenderPassVkInitInfo RPDesc{};
 
         VkFormat ColorFormat = WindowContext->GetSwapchainImageFormat();
 
-        RPInitInfo->ColorAttachmentCount = 1;
-        VkAttachmentDescription& ColorAttachment = RPInitInfo->ColorAttachment[0];
+        RPDesc.ColorAttachmentCount = 1;
+        VkAttachmentDescription& ColorAttachment = RPDesc.ColorAttachment[0];
         ColorAttachment.format = ColorFormat;
         ColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
@@ -58,19 +58,19 @@ C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, 
         ColorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         ColorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        RPInitInfo->ColorAttachmentRefCount = 1;
-        VkAttachmentReference& ColorAttachmentRef = RPInitInfo->ColorAttachmentRef[0];
+        RPDesc.ColorAttachmentRefCount = 1;
+        VkAttachmentReference& ColorAttachmentRef = RPDesc.ColorAttachmentRef[0];
         ColorAttachmentRef.attachment = 0;
         ColorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        RPInitInfo->SubpassCount = 1;
-        VkSubpassDescription& Subpass = RPInitInfo->Subpass[0];
+        RPDesc.SubpassCount = 1;
+        VkSubpassDescription& Subpass = RPDesc.Subpass[0];
         Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         Subpass.colorAttachmentCount = 1;
         Subpass.pColorAttachments = &ColorAttachmentRef;
 
-        RPInitInfo->SubpassDependencyCount = 1;
-        VkSubpassDependency& SubpassDependency = RPInitInfo->SubpassDependency[0];
+        RPDesc.SubpassDependencyCount = 1;
+        VkSubpassDependency& SubpassDependency = RPDesc.SubpassDependency[0];
         SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         SubpassDependency.dstSubpass = 0;
         SubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -78,29 +78,29 @@ C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, 
         SubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         SubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        RPInitInfo->Backend = Backend;
-        RPInitInfo->Device = WindowContext->GetDevice();
+        RPDesc.Backend = Backend;
+        RPDesc.Device = WindowContext->GetDevice();
 
-        C_STATUS Result = m_pimpl->RenderPassUI.Init(RPInitInfo);
+        C_STATUS Result = m_pimpl->RenderPassUI.Init(RPDesc);
         CASSERT(C_SUCCEEDED(Result));
     }
 
     {
-        FrameBufferVkInitInfo FBInitInfo{};
-        FBInitInfo.Backend = Backend;
-        FBInitInfo.Device = WindowContext->GetDevice();
-        FBInitInfo.RenderPass = &m_pimpl->RenderPassUI;
-        FBInitInfo.Width = WindowContext->GetSwapchainExtent().width;
-        FBInitInfo.Height = WindowContext->GetSwapchainExtent().height;
-        FBInitInfo.Layers = 1;
+        FrameBufferVkInitInfo FBDesc{};
+        FBDesc.Backend = Backend;
+        FBDesc.Device = WindowContext->GetDevice();
+        FBDesc.RenderPass = &m_pimpl->RenderPassUI;
+        FBDesc.Width = WindowContext->GetSwapchainExtent().width;
+        FBDesc.Height = WindowContext->GetSwapchainExtent().height;
+        FBDesc.Layers = 1;
 
         m_pimpl->FrameBufferUI.resize(WindowContext->GetSwapchainImageViewCount());
         for (uint32_t i = 0; i < m_pimpl->FrameBufferUI.size(); ++i)
         {
-            FBInitInfo.Attachments[0] = WindowContext->GetSwapchainImageView(i);
-            FBInitInfo.AttachmentsCount = 1;
+            FBDesc.Attachments[0] = WindowContext->GetSwapchainImageView(i);
+            FBDesc.AttachmentsCount = 1;
 
-            C_STATUS Result = m_pimpl->FrameBufferUI[i].Init(FBInitInfo);
+            C_STATUS Result = m_pimpl->FrameBufferUI[i].Init(FBDesc);
             CASSERT(C_SUCCEEDED(Result));
         }
     }

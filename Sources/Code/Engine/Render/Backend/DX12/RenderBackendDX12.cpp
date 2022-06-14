@@ -38,7 +38,7 @@ C_STATUS RenderBackendDX12::EndRender()
     return C_STATUS::C_STATUS_OK;
 }
 
-WindowContext* RenderBackendDX12::CreateWindowContext(IWindow* Window)
+CWindowContext* RenderBackendDX12::CreateWindowContext(IWindow* Window)
 {
     return nullptr;
 }

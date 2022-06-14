@@ -13,7 +13,7 @@ namespace Cyclone::Render
 
 
 // #todo_dx12 refactor
-class WindowContextDX12 : public WindowContext
+class WindowContextDX12 : public CWindowContext
 {
 public:
     CCommandQueue* GetCommandQueue(CommandQueueType QueueType) const override { return nullptr; }
@@ -31,7 +31,7 @@ public:
 
     IRenderer* GetRenderer() const { return m_Renderer; }
 
-    virtual WindowContext* CreateWindowContext(IWindow* Window) override;
+    virtual CWindowContext* CreateWindowContext(IWindow* Window) override;
     virtual CCommandQueue* CreateCommandQueue() override;
     virtual CCommandBuffer* CreateCommandBuffer() override;
     virtual CTexture* CreateTexture() override;

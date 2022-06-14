@@ -13,7 +13,7 @@ namespace Render
 class IRendererBackend;
 class CRenderScene;
 class CRenderSceneView;
-class WindowContext;
+class CWindowContext;
 class CCommandQueue;
 enum class CommandQueueType;
 
@@ -63,7 +63,7 @@ public:
 
     virtual Render::IRendererBackend* GetRendererBackend() = 0;
 
-    virtual Render::WindowContext* OnAddWindow(IWindow* Window) = 0;
+    virtual Render::CWindowContext* OnAddWindow(IWindow* Window) = 0;
     virtual void OnRemoveWindow(IWindow* Window) = 0;
 
     virtual Render::CRenderScene* AddScene(CScene* Scene) = 0;
@@ -72,8 +72,8 @@ public:
     virtual Render::CRenderSceneView* AddViewport(CSceneViewport* Viewport) = 0;
     virtual void RemoveViewport(CSceneViewport* Viewport) = 0;
 
-    virtual Render::WindowContext* GetWindowContext(IWindow* Window) = 0;
-    virtual Render::WindowContext* GetDefaultWindowContext() = 0;
+    virtual Render::CWindowContext* GetWindowContext(IWindow* Window) = 0;
+    virtual Render::CWindowContext* GetDefaultWindowContext() = 0;
     virtual Render::CCommandQueue* GetDefaultCommandQueue(Render::CommandQueueType Type) = 0;
 };
 

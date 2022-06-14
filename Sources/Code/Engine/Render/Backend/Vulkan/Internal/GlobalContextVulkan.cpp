@@ -3,10 +3,12 @@
 #include "Engine/Framework/IApplication.h"
 #include "Engine/Framework/IWindow.h"
 
-#include "RenderBackendVk.h"
+#include "RenderBackendVulkan.h"
 
-#include "CommandQueueVk.h"
-#include "CommandBufferVk.h"
+#include "CommandQueueVulkan.h"
+#include "CommandBufferVulkan.h"
+
+#include <iostream>
 
 namespace Cyclone::Render
 {
@@ -18,8 +20,8 @@ namespace Cyclone::Render
 #endif
 
 // #todo_win #todo_vk make platform independent code without defines and make it extensible
-std::vector<const char*> GVkInstanceValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-std::vector<const char*> GVkInstanceExtensions = {
+Vector<const char*> GVkInstanceValidationLayers = { "VK_LAYER_KHRONOS_validation" };
+Vector<const char*> GVkInstanceExtensions = {
 #if PLATFORM_WIN64
     VK_KHR_SURFACE_EXTENSION_NAME,
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -74,7 +76,7 @@ C_STATUS GlobalContextVulkan::CreateInstance(InstanceCreationDesc Desc)
     CreateInfo.pApplicationInfo = &AppInfo;
 
     // Instance Extensions
-    std::vector<const char*> InstanceExtensions(GVkInstanceExtensions.size() + Desc.EnabledExtensions.size());
+    Vector<const char*> InstanceExtensions(GVkInstanceExtensions.size() + Desc.EnabledExtensions.size());
 
     {
         uint32 count = 0;
@@ -92,7 +94,7 @@ C_STATUS GlobalContextVulkan::CreateInstance(InstanceCreationDesc Desc)
     }
 
     // Instance Layers
-    std::vector<const char*> InstanceLayers(Desc.EnabledLayers.size());
+    Vector<const char*> InstanceLayers(Desc.EnabledLayers.size());
     {
         uint32 count = 0;
         for (const auto& Name : Desc.EnabledLayers)
@@ -121,7 +123,7 @@ C_STATUS GlobalContextVulkan::CreateInstance(InstanceCreationDesc Desc)
         uint32_t ExtensionsCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionsCount, nullptr);
 
-        std::vector<VkExtensionProperties> Extensions(ExtensionsCount);
+        Vector<VkExtensionProperties> Extensions(ExtensionsCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionsCount, Extensions.data());
 
         std::cout << "Vulkan available extensions:\n";
@@ -148,7 +150,7 @@ bool GlobalContextVulkan::CheckValidationlayerSupport()
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-    std::vector<VkLayerProperties> availableLayers(layerCount);
+    Vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
     for (const auto& layerName : GVkInstanceValidationLayers)
@@ -227,7 +229,7 @@ Cyclone::C_STATUS GlobalContextVulkan::PickPhysicalDevice(DeviceCreationDesc Des
 
     C_ASSERT_RETURN_VAL(DeviceCount != 0, C_STATUS::C_STATUS_ERROR);
 
-    std::vector<VkPhysicalDevice> Devices(DeviceCount);
+    Vector<VkPhysicalDevice> Devices(DeviceCount);
     vkEnumeratePhysicalDevices(GetInstance(), &DeviceCount, Devices.data());
 
     for (const auto& Device : Devices)
@@ -254,7 +256,7 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
 {
     QueueFamilyIndices Indices = FindQueueFamilies(PhysDevice.PhysicalDeviceHandle, Desc.Surface);
 
-    std::vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
+    Vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
     std::set<uint32_t> UniqueQueueIndices = { Indices.GraphicsFamily.value(), Indices.PresentFamily.value() };
 
     if (Indices.AsyncComputeFamily.has_value())
@@ -282,7 +284,7 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
     CreateInfo.queueCreateInfoCount = static_cast<uint32_t>(QueueCreateInfos.size());
     CreateInfo.pEnabledFeatures = &PhysicalDeviceFeatures;
 
-    std::vector<const char*> DeviceExtensions(Desc.EnabledPhysicalDeviceExtensions.size());
+    Vector<const char*> DeviceExtensions(Desc.EnabledPhysicalDeviceExtensions.size());
     {
         for (uint32 i = 0; i < DeviceExtensions.size(); ++i)
         {
@@ -298,9 +300,10 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
     VkResult Result = vkCreateDevice(PhysDevice.PhysicalDeviceHandle, &CreateInfo, nullptr, &LogicDevice.LogicalDeviceHandle);
     C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
 
+    // #todo_vk refactor #todo_move
     auto InitQueue = [&](CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
     {
-        auto CommandQueue = std::make_unique<CommandQueueVk>();
+        UniquePtr<CommandQueueVulkan> CommandQueue(static_cast<CommandQueueVulkan*>(m_Backend->CreateCommandQueue()));
         C_STATUS res = CommandQueue->Init(m_Backend, OutHandle, QueueType, QueueFamilyIndex, QueueIndex);
         CASSERT(C_SUCCEEDED(res));
 
@@ -317,7 +320,7 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
     return C_STATUS::C_STATUS_OK;
 }
 
-bool GlobalContextVulkan::IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, std::vector<std::string> PhysicalDeviceExtensions)
+bool GlobalContextVulkan::IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, Vector<std::string> PhysicalDeviceExtensions)
 {
 #if 0
     VkPhysicalDeviceProperties DeviceProperties;
@@ -359,7 +362,7 @@ QueueFamilyIndices GlobalContextVulkan::FindQueueFamilies(VkPhysicalDevice Devic
     uint32_t QueueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, nullptr);
 
-    std::vector<VkQueueFamilyProperties> QueueFamilies(QueueFamilyCount);
+    Vector<VkQueueFamilyProperties> QueueFamilies(QueueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(Device, &QueueFamilyCount, QueueFamilies.data());
 
     int i = 0;
@@ -442,12 +445,12 @@ SwapChainSupportDetails GlobalContextVulkan::QuerySwapChainSupport(VkPhysicalDev
     return Details;
 }
 
-bool GlobalContextVulkan::CheckDeviceExtensionSupport(VkPhysicalDevice device, std::vector<std::string> PhysicalDeviceExtensions)
+bool GlobalContextVulkan::CheckDeviceExtensionSupport(VkPhysicalDevice device, Vector<std::string> PhysicalDeviceExtensions)
 {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    Vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
     std::set<std::string> requiredExtensions(PhysicalDeviceExtensions.begin(), PhysicalDeviceExtensions.end());
@@ -469,12 +472,19 @@ bool GlobalContextVulkan::IsLogicalDeviceSuitable(VkPhysicalDevice PhysDevice, V
 
 void GlobalContextVulkan::DestroyDevices()
 {
+    // #todo_vk refactor to destructors
     for (auto& PhysDevice : m_Devices)
     {
         for (auto& LogicDevice : PhysDevice.LogicalDevices)
         {
+            for (auto& Queue : LogicDevice.CommandQueues)
+            {
+                Queue.reset();
+            }
             vkDestroyDevice(LogicDevice.LogicalDeviceHandle, nullptr);
         }
+
+        PhysDevice.LogicalDevices.clear();
     }
 
     m_Devices.clear();

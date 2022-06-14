@@ -2,14 +2,25 @@
 
 #include "Engine/UI/CommonUI.h"
 #include "Engine/Framework/IWindow.h"
+#include "Engine/Framework/IRenderer.h"
+
+#include "Engine/Scene/Scene.h"
+#include "Engine/Scene/SceneViewport.h"
 
 namespace Cyclone
 {
 
 C_STATUS EditorApplication::OnInit()
 {
+    IRenderer* Renderer = GetRenderer();
+    CASSERT(Renderer);
+
     // #todo_editor refactor
     uint32 ViewportsCount = 2;
+
+    m_Scenes.emplace_back(std::make_shared<CScene>());
+    Ptr<CScene> Scene = m_Scenes.back();
+    Renderer->AddScene(Scene.get());
 
     CASSERT(m_Windows.size() > 0);
     Ptr<IWindow> Window = m_Windows[0];
@@ -18,11 +29,15 @@ C_STATUS EditorApplication::OnInit()
     for (uint32 i = 0; i < m_Viewports.size(); ++i)
     {
         auto& Viewport = m_Viewports[i];
+        Viewport = std::make_shared<CSceneViewport>();
 
-        Viewport.Window = Window;
-        Viewport.UpperLeftCorner = Vec2{ 100.f, 100.f };
-        Viewport.BottomRightCorner = Vec2{ Window->GetWidth() - 100.f, Window->GetHeight() - 100.f};
-        Viewport.Camera = std::make_shared<CCamera>();
+        Viewport->Window = Window;
+        Viewport->Scene = Scene;
+        Viewport->UpperLeftCorner = Vec2{ 100.f, 100.f };
+        Viewport->BottomRightCorner = Vec2{ Window->GetWidth() - 100.f, Window->GetHeight() - 100.f };
+        Viewport->Camera = std::make_shared<CCamera>();
+
+        Renderer->AddViewport(Viewport.get());
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -40,6 +55,9 @@ C_STATUS EditorApplication::OnRender()
 
 C_STATUS EditorApplication::OnUpdateUI()
 {
+    if (ImGui::GetCurrentContext() == nullptr)
+        return C_STATUS::C_STATUS_OK;
+
     ImGui::DockSpaceOverViewport(nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
     ShowMenu();
@@ -141,6 +159,8 @@ void EditorApplication::ShowViewports()
         String WindowName = "Viewport " + std::to_string(i);
         if (ImGui::Begin(WindowName.c_str()))
         {
+            //Viewport->UpperLeftCorner = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
+            //Viewport->BottomRightCorner= { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x , ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
         }
         ImGui::End();
     }

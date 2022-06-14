@@ -5,6 +5,7 @@ namespace Cyclone
 
 #define PROFILING_TOOL_DISABLE 0
 #define PROFILING_TOOL_PIX 1
+#define PROFILING_TOOL_VULKAN 2
 
 #define PROFILING_TOOL PROFILING_TOOL_DISABLE 
     //PROFILING_TOOL_PIX
@@ -35,6 +36,10 @@ namespace Cyclone
 
 #define PROFILE_CPU_END_EVENT() PIX_PROFILE_CPU_END_EVENT()
 #define PROFILE_GPU_END_EVENT(commandListOrQueue) PIX_PROFILE_GPU_END_EVENT(commandListOrQueue)
+
+#elif PROFILING_TOOL == PROFILING_TOOL_VULKAN
+
+#error Vulkan profiling is not Implemented yet!
 
 #else
 

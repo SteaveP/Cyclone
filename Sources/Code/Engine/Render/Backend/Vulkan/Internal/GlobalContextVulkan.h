@@ -1,25 +1,22 @@
 #pragma once
 
-#include "Common/CommonVulkan.h"
-
+#include "CommonVulkan.h"
 
 namespace Cyclone::Render
 {
 
-class CommandQueueVk;
-
 struct SwapChainSupportDetails
 {
     VkSurfaceCapabilitiesKHR Capabilities;
-    std::vector<VkSurfaceFormatKHR> Formats;
-    std::vector<VkPresentModeKHR> PresentModes;
+    Vector<VkSurfaceFormatKHR> Formats;
+    Vector<VkPresentModeKHR> PresentModes;
 };
 
 struct QueueFamilyIndices
 {
-    std::optional<uint32_t> GraphicsFamily;
-    std::optional<uint32_t> PresentFamily;
-    std::optional<uint32_t> AsyncComputeFamily; // optional
+    std::optional<uint32> GraphicsFamily;
+    std::optional<uint32> PresentFamily;
+    std::optional<uint32> AsyncComputeFamily; // optional
 
     bool IsComplete();
 };
@@ -28,9 +25,9 @@ struct LogicalDevice
 {
     VkDevice LogicalDeviceHandle = VK_NULL_HANDLE;
 
-    std::unique_ptr<CommandQueueVk> CommandQueues[(uint32_t)CommandQueueType::Count]{};
+    Array<UniquePtr<CommandQueueVulkan>, uint32(CommandQueueType::Count)> CommandQueues;
 
-    CommandQueueVk* GetCommandQueue(CommandQueueType QueueType) const { return CommandQueues[(uint32_t)QueueType].get(); }
+    CommandQueueVulkan* GetCommandQueue(CommandQueueType QueueType) const { return CommandQueues[uint32(QueueType)].get(); }
 };
 
 struct PhysicalDevice
@@ -38,19 +35,19 @@ struct PhysicalDevice
     VkPhysicalDevice PhysicalDeviceHandle = VK_NULL_HANDLE;
     VkSampleCountFlagBits MaxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    std::vector<LogicalDevice> LogicalDevices;
+    Vector<LogicalDevice> LogicalDevices;
 };
 
 struct InstanceCreationDesc
 {
-    std::vector<std::string> EnabledLayers;
-    std::vector<std::string> EnabledExtensions;
+    Vector<String> EnabledLayers;
+    Vector<String> EnabledExtensions;
 
 };
 struct DeviceCreationDesc
 {
     VkSurfaceKHR Surface = VK_NULL_HANDLE;
-    std::vector<std::string> EnabledPhysicalDeviceExtensions; //= { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    Vector<String> EnabledPhysicalDeviceExtensions;
 };
 
 class GlobalContextVulkan
@@ -77,14 +74,14 @@ protected:
     C_STATUS CreateInstance(InstanceCreationDesc Desc);
     void DestroyInstance();
 
-    bool IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, std::vector<std::string> PhysicalDeviceExtensions);
+    bool IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, Vector<String> PhysicalDeviceExtensions);
     C_STATUS PickPhysicalDevice(DeviceCreationDesc Desc, DeviceHandle& OutHandle);
 
     bool IsLogicalDeviceSuitable(VkPhysicalDevice PhysDevice, VkDevice Device, VkSurfaceKHR Surface);
     C_STATUS CreateLogicalDevice(PhysicalDevice& PhysDevice, DeviceCreationDesc Desc, DeviceHandle& OutHandle);
     void DestroyDevices();
     
-    bool CheckDeviceExtensionSupport(VkPhysicalDevice Device, std::vector<std::string> PhysicalDeviceExtensions);
+    bool CheckDeviceExtensionSupport(VkPhysicalDevice Device, Vector<String> PhysicalDeviceExtensions);
     bool CheckValidationlayerSupport();
 
     VkSampleCountFlagBits GetMaxUsableMSAASampleCount(VkPhysicalDevice Device);
@@ -94,7 +91,7 @@ protected:
 
     VkInstance m_Instance = VK_NULL_HANDLE;
 
-    std::vector<PhysicalDevice> m_Devices;
+    Vector<PhysicalDevice> m_Devices;
 };
 
 } // namespace Cyclone::Render

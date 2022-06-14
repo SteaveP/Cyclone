@@ -2,10 +2,14 @@
 
 #include "Engine/Framework/IApplication.h"
 #include "Engine/Framework/IWindow.h"
-#include "RenderBackendVk.h"
+#include "Engine/Framework/IRenderer.h"
+#include "RenderBackendVulkan.h"
 
-#include "CommandQueueVk.h"
-#include "CommandBufferVk.h"
+#include "CommandQueueVulkan.h"
+#include "CommandBufferVulkan.h"
+
+#include "Engine/Render/Common.h"
+#include "Engine/Render/Types/Texture.h"
 
 #if PLATFORM_WIN64
     #include <vulkan/vulkan_win32.h>
@@ -16,7 +20,7 @@
 namespace Cyclone::Render
 {
 
-static std::vector<std::string> GVkPhysicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static Vector<std::string> GVkPhysicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 WindowContextVulkan::WindowContextVulkan() = default;
 WindowContextVulkan::~WindowContextVulkan()
@@ -24,16 +28,18 @@ WindowContextVulkan::~WindowContextVulkan()
     CASSERT(m_Surface == VK_NULL_HANDLE);
 }
 
-C_STATUS WindowContextVulkan::Init(RenderBackendVulkan* RenderBackend, IWindow* Window)
+C_STATUS WindowContextVulkan::Init(IRenderer* Renderer, IWindow* Window)
 {
-    m_Backend = RenderBackend;
-    m_Window = Window;
+    C_STATUS Result = CWindowContext::Init(Renderer, Window);
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+    m_Backend = static_cast<RenderBackendVulkan*>(Renderer->GetRendererBackend());
     
     if (m_Backend == nullptr || m_Window == nullptr)
         return C_STATUS::C_STATUS_INVALID_ARG;
 
     
-    C_STATUS Result = CreateSurface(m_Window);
+    Result = CreateSurface(m_Window);
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result); 
 
     {
@@ -61,6 +67,9 @@ C_STATUS WindowContextVulkan::Init(RenderBackendVulkan* RenderBackend, IWindow* 
 
 C_STATUS WindowContextVulkan::Shutdown()
 {
+    C_STATUS Result = CWindowContext::Shutdown();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
     DestroySyncObjects();
     CleanupSwapchain();
     DestroySurface();
@@ -147,7 +156,7 @@ C_STATUS WindowContextVulkan::CreateSwapchainImageViews()
     return C_STATUS::C_STATUS_OK;
 }
 
-VkSurfaceFormatKHR WindowContextVulkan::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& AvailableFormats)
+VkSurfaceFormatKHR WindowContextVulkan::ChooseSwapSurfaceFormat(const Vector<VkSurfaceFormatKHR>& AvailableFormats)
 {
     for (const auto& AvailableFormat : AvailableFormats)
     {
@@ -160,7 +169,7 @@ VkSurfaceFormatKHR WindowContextVulkan::ChooseSwapSurfaceFormat(const std::vecto
     return AvailableFormats[0];
 }
 
-VkPresentModeKHR WindowContextVulkan::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& AvailablePresentModes)
+VkPresentModeKHR WindowContextVulkan::ChooseSwapPresentMode(const Vector<VkPresentModeKHR>& AvailablePresentModes)
 {
     for (const auto& AvailablePresentMode : AvailablePresentModes) {
         if (AvailablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -244,8 +253,8 @@ C_STATUS WindowContextVulkan::CreateSwapchain()
     CreateInfo.clipped = VK_TRUE;
     CreateInfo.oldSwapchain = VK_NULL_HANDLE; // #todo_swapchain handle resize
 
-    VkResult Result = vkCreateSwapchainKHR(LogicDevice.LogicalDeviceHandle, &CreateInfo, nullptr, &m_Swapchain);
-    C_ASSERT_VK_SUCCEEDED(Result);
+    VkResult ResultVk = vkCreateSwapchainKHR(LogicDevice.LogicalDeviceHandle, &CreateInfo, nullptr, &m_Swapchain);
+    C_ASSERT_VK_SUCCEEDED(ResultVk);
 
     // acquire swap chain images
     uint32_t SwapchainImagesCount;
@@ -255,6 +264,32 @@ C_STATUS WindowContextVulkan::CreateSwapchain()
 
     m_SwapchainImageFormat = SurfaceFormat.format;
     m_SwapchainExtent = Extent;
+
+    m_BackBuffers.resize(m_SwapchainImages.size());
+    for (size_t i = 0; i < m_BackBuffers.size(); ++i)
+    {
+        auto& BackBuffer = m_BackBuffers[i];
+
+        BackBuffer = std::make_shared<CRenderTarget>();
+        BackBuffer->Texture.reset(m_Backend->CreateTexture());
+
+        CTextureDesc Desc{};
+        Desc.Format = ConvertFormatType(CreateInfo.imageFormat);
+        Desc.Flags;
+        Desc.ImageType = EImageType::Type2D;
+        Desc.Tiling = ETilingType::Optimal;
+        Desc.InitialLayout = EImageLayout::Undefined;
+        Desc.Width = CreateInfo.imageExtent.width;
+        Desc.Height = CreateInfo.imageExtent.height;
+        Desc.Depth = 1;
+        Desc.MipLevels = 1;
+        Desc.ArrayCount = 1;
+        Desc.SamplesCount = 1;
+
+        Desc.ExternalBackendResource = m_SwapchainImages[i];
+        C_STATUS Result = BackBuffer->Texture->Init(Desc);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
 
     return C_STATUS::C_STATUS_OK;
 }
@@ -287,20 +322,23 @@ C_STATUS WindowContextVulkan::CreateSyncObjects()
 
 C_STATUS WindowContextVulkan::BeginRender()
 {
+    C_STATUS Result = CWindowContext::BeginRender();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
     vkWaitForFences(GetLogicDevice(), 1, &m_InflightFences[m_CurrentLocalFrame], VK_TRUE, UINT64_MAX);
 
     CheckCommandLists();
 
-    VkResult result = vkAcquireNextImageKHR(GetLogicDevice(), m_Swapchain, UINT64_MAX, m_ImageAvailabeSemaphores[m_CurrentLocalFrame], VK_NULL_HANDLE, &m_CurrentImageIndex);
+    VkResult ResultVk = vkAcquireNextImageKHR(GetLogicDevice(), m_Swapchain, UINT64_MAX, m_ImageAvailabeSemaphores[m_CurrentLocalFrame], VK_NULL_HANDLE, &m_CurrentImageIndex);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    if (ResultVk == VK_ERROR_OUT_OF_DATE_KHR)
     {
         RecreateSwapchain();
         return C_STATUS::C_STATUS_OK;
     }
     else
     {
-        CASSERT(result == VkResult::VK_SUCCESS || result == VkResult::VK_SUBOPTIMAL_KHR);
+        CASSERT(ResultVk == VkResult::VK_SUCCESS || ResultVk == VkResult::VK_SUBOPTIMAL_KHR);
     }
 
     if (m_ImagesInFlight[m_CurrentImageIndex] != VK_NULL_HANDLE)
@@ -313,8 +351,20 @@ C_STATUS WindowContextVulkan::BeginRender()
     return C_STATUS::C_STATUS_OK;
 }
 
-C_STATUS WindowContextVulkan::Present(VkSemaphore RenderFinishedSemaphore)
+C_STATUS WindowContextVulkan::Present()
 {
+    C_STATUS Result = CWindowContext::Present();
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+    // #todo_vk optimize (here just submit fence and semaphores for frame's end
+    if (CommandQueueVulkan* CommandQueue = GetCommandQueueVk(CommandQueueType::Graphics))
+    {
+        auto CurrentFrame = GetCurrentLocalFrame();
+
+        CommandQueue->SubmitVk(nullptr, 0, GetImageAvailableSemaphore(CurrentFrame),
+            GetInflightFence(CurrentFrame), true);
+    }
+
     // #todo_vk
     std::array<VkSemaphore, 20> WaitSemaphores;
     uint32_t WaitSemaphoresCount = 0;
@@ -333,11 +383,11 @@ C_STATUS WindowContextVulkan::Present(VkSemaphore RenderFinishedSemaphore)
         }
     }
 
-    if (RenderFinishedSemaphore != VK_NULL_HANDLE)
-    {
-        WaitSemaphores[WaitSemaphoresCount] = RenderFinishedSemaphore;
-        WaitSemaphoresCount++;
-    }
+    //if (RenderFinishedSemaphore != VK_NULL_HANDLE)
+    //{
+    //    WaitSemaphores[WaitSemaphoresCount] = RenderFinishedSemaphore;
+    //    WaitSemaphoresCount++;
+    //}
 
     VkPresentInfoKHR PresentInfo{};
     PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -353,16 +403,16 @@ C_STATUS WindowContextVulkan::Present(VkSemaphore RenderFinishedSemaphore)
     auto* PresentQueue = Device.GetCommandQueue(CommandQueueType::Present);
     CASSERT(PresentQueue);
 
-    VkResult Result = vkQueuePresentKHR(PresentQueue->Get(), &PresentInfo);
+    VkResult ResultVk = vkQueuePresentKHR(PresentQueue->Get(), &PresentInfo);
 
-    if (Result == VK_ERROR_OUT_OF_DATE_KHR || Result == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+    if (ResultVk == VK_ERROR_OUT_OF_DATE_KHR || ResultVk == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
     {
         m_FramebufferResized = false;
         RecreateSwapchain();
     }
     else
     {
-        C_ASSERT_VK_SUCCEEDED(Result);
+        C_ASSERT_VK_SUCCEEDED(ResultVk);
     }
 
     m_CurrentLocalFrame = (m_CurrentLocalFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -374,7 +424,7 @@ void WindowContextVulkan::CheckCommandLists()
 {
     const auto& Device = m_Backend->GetGlobalContext().GetLogicalDevice(m_Device);
 
-    Device.GetCommandQueue(CommandQueueType::Graphics)->OnBeginFrame();
+    Device.GetCommandQueue(CommandQueueType::Graphics)->OnBeginRender();
 }
 
 void WindowContextVulkan::DestroySyncObjects()
@@ -397,9 +447,14 @@ void WindowContextVulkan::DestroySyncObjects()
     }
 }
 
-CommandQueueVk* WindowContextVulkan::GetCommandQueue(CommandQueueType QueueType) const
+CommandQueueVulkan* WindowContextVulkan::GetCommandQueueVk(CommandQueueType QueueType) const
 {
     return m_Backend->GetGlobalContext().GetLogicalDevice(m_Device).GetCommandQueue(QueueType);
+}
+
+CCommandQueue* WindowContextVulkan::GetCommandQueue(CommandQueueType QueueType) const
+{
+    return GetCommandQueueVk(QueueType);
 }
 
 } // namespace Cyclone::Render

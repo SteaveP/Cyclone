@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/CommonVulkan.h"
+#include "CommonVulkan.h"
 
 namespace Cyclone::Render
 {
@@ -10,6 +10,9 @@ class RenderPassVk;
 
 struct FrameBufferVkInitInfo
 {
+    DISABLE_COPY_DISABLE_MOVE(FrameBufferVkInitInfo);
+    FrameBufferVkInitInfo() = default;
+
     std::array<VkImageView, 10> Attachments;
     uint32_t AttachmentsCount;
 
@@ -26,14 +29,17 @@ struct FrameBufferVkInitInfo
 class FrameBufferVk
 {
 public:
-    C_STATUS FrameBufferVk::Init(const FrameBufferVkInitInfo& InitInfo);
+    ~FrameBufferVk();
 
-    VkFramebuffer Get() const { return m_frameBuffer; }
-    RenderPassVk* GetRenderPass() const { return m_renderPass; }
+    C_STATUS Init(const FrameBufferVkInitInfo& InitInfo);
+    void DeInit();
+
+    VkFramebuffer Get() const { return m_FrameBuffer; }
+    RenderPassVk* GetRenderPass() const { return m_RenderPass; }
 
 protected:
-    RenderPassVk* m_renderPass = nullptr;
-    VkFramebuffer m_frameBuffer = VK_NULL_HANDLE;
+    RenderPassVk* m_RenderPass = nullptr;
+    VkFramebuffer m_FrameBuffer = VK_NULL_HANDLE;
 };
 
 } // namespace Cyclone::Render

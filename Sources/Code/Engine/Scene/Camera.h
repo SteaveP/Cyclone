@@ -6,9 +6,6 @@
 namespace Cyclone
 {
 
-class CCamera;
-using CCameraPtr = Ptr<CCamera>;
-
 class ENGINE_API CCamera
 {
 public:

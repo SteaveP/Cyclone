@@ -36,10 +36,24 @@ namespace Cyclone
 	#error unsupported platform
 #endif
 
-#define DISABLE_COPY_ENABLE_MOVE(ClassName) \
+#define DISABLE_COPY(ClassName) \
     ClassName(const ClassName& Other) = delete; \
     ClassName& operator =(const ClassName& Other) = delete; \
+
+#define DISABLE_MOVE(ClassName) \
+    ClassName(ClassName&& Other) = delete; \
+    ClassName& operator =(ClassName&& Other) = delete;
+
+#define ENABLE_MOVE(ClassName) \
     ClassName(ClassName&& Other) = default; \
     ClassName& operator =(ClassName&& Other) = default;
+
+#define DISABLE_COPY_ENABLE_MOVE(ClassName) \
+    DISABLE_COPY(ClassName); \
+    ENABLE_MOVE(ClassName);
+
+#define DISABLE_COPY_DISABLE_MOVE(ClassName) \
+    DISABLE_COPY(ClassName); \
+    DISABLE_MOVE(ClassName);
 
 } // namespace Cyclone

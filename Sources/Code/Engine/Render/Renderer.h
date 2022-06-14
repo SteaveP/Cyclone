@@ -2,7 +2,9 @@
 
 #include "Engine/EngineModule.h"
 #include "Engine/Framework/IRenderer.h"
-#include "Engine/Render/IRendererBackend.h"
+#include "IRendererBackend.h"
+
+#include "Common.h"
 
 namespace Cyclone::Render
 {
@@ -10,7 +12,8 @@ namespace Cyclone::Render
 class ENGINE_API Renderer : public IRenderer
 {
 public:
-    ~Renderer() = default;
+    Renderer();
+    virtual ~Renderer();
 
     virtual C_STATUS PreInit(IRendererBackend* RendererBackend);
 
@@ -26,21 +29,43 @@ public:
     virtual C_STATUS Render() override;
     virtual C_STATUS EndRender() override;
 
-    virtual void OnResize(const IWindow* window) override;
+    virtual uint32 GetCurrentFrame() const override { return m_CurrentFrame; }
+    virtual uint32 GetCurrentLocalFrame() const override { return m_CurrentLocalFrame; }
 
     virtual void WaitGPU() override;
     
-    virtual IRendererBackend* GetRendererBackend() override { return m_rendererBackend; }
+    virtual IRendererBackend* GetRendererBackend() override { return m_RendererBackend; }
 
-    virtual IApplication* GetApp() const override { return m_app; }
+    virtual IApplication* GetApp() const override { return m_App; }
 
-    virtual void SetSceneRenderer(ISceneRenderer* sceneRenderer) override;
-    virtual ISceneRenderer* GetSceneRenderer() const override;
+    virtual CWindowContext* GetWindowContext(IWindow* Window) override;
+    virtual CWindowContext* GetDefaultWindowContext() override;
+    virtual CCommandQueue* GetDefaultCommandQueue(CommandQueueType Type) override;
+    
+    virtual CWindowContext* OnAddWindow(IWindow* Window) override;
+    virtual void OnRemoveWindow(IWindow* Window) override;
 
+    virtual CRenderScene* AddScene(CScene* Scene) override;
+    virtual void RemoveScene(CScene* Scene) override;
+
+    virtual CRenderScene* GetRenderScene(CScene* Scene);
+
+    virtual CRenderSceneView* AddViewport(CSceneViewport* Viewport) override;
+    virtual void RemoveViewport(CSceneViewport* Viewport) override;
+
+    void RenderSceneView(CRenderSceneView* SceneView);
 protected:
-    IRendererBackend* m_rendererBackend;
-    IApplication* m_app;
-    IWindow* m_window;
+    IRendererBackend* m_RendererBackend = nullptr;
+    IApplication* m_App = nullptr;
+    Vector<IWindow*> m_Windows;
+
+    Vector<UniquePtr<CWindowContext>> m_WindowContexts;
+
+    uint32_t m_CurrentLocalFrame = 0;   // Local frame counter [0, MAX_FRAMES_IN_FLIGHT)
+    uint32_t m_CurrentFrame = 0;        // Global frame counter
+
+    // #todo_vk move to separate file and class?
+    UniquePtr<CRenderScene> m_RenderScene;
 };
 
 } // namespace Cyclone::Render

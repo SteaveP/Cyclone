@@ -13,7 +13,7 @@ class IModule;
 namespace Render
 {
 
-class WindowContext;
+class CWindowContext;
 class CCommandQueue;
 class CCommandBuffer;
 class CTexture;
@@ -29,12 +29,14 @@ public:
     virtual C_STATUS BeginRender() = 0;
     virtual C_STATUS EndRender() = 0;
 
-    virtual WindowContext* CreateWindowContext(IWindow* Window) = 0;
+    virtual CWindowContext* CreateWindowContext(IWindow* Window) = 0;
     virtual CCommandQueue* CreateCommandQueue() = 0;
     virtual CCommandBuffer* CreateCommandBuffer() = 0;
 
     virtual CTexture* CreateTexture() = 0;
     virtual IRenderer* GetRenderer() const = 0;
+
+    virtual void WaitGPU() = 0;
 };
 
 } // namespace Render
