@@ -35,4 +35,11 @@ namespace Cyclone
 #else
 	#error unsupported platform
 #endif
+
+#define DISABLE_COPY_ENABLE_MOVE(ClassName) \
+    ClassName(const ClassName& Other) = delete; \
+    ClassName& operator =(const ClassName& Other) = delete; \
+    ClassName(ClassName&& Other) = default; \
+    ClassName& operator =(ClassName&& Other) = default;
+
 } // namespace Cyclone

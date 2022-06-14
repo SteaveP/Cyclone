@@ -268,16 +268,16 @@ WindowWinApi::~WindowWinApi()
     Deinit();
 }
 
-C_STATUS WindowWinApi::Init(const WindowParams* GenericParams)
+C_STATUS WindowWinApi::Init(const WindowDesc* Desc)
 {
-    const WinApiWindowParams* Params = reinterpret_cast<const WinApiWindowParams*>(GenericParams);
+    const WinApiWindowParams* WinApiDesc = reinterpret_cast<const WinApiWindowParams*>(Desc->PlatformDataPtr);
 
-    m_App = Params->App;
-    m_Width = Params->Width;
-    m_Height = Params->Height;
-    int cmdShowFlag = SW_SHOWDEFAULT;
+    m_App = Desc->App;
+    m_Width = Desc->Width;
+    m_Height = Desc->Height;
+    m_hInstance = WinApiDesc->hInstance;
+    int CmdShowFlag = WinApiDesc->nCmdShow; // SW_SHOWDEFAULT;
 
-    // #todo_fixme
     if (m_hInstance == NULL)
     {
         m_hInstance = GetModuleHandle(NULL);
@@ -287,12 +287,12 @@ C_STATUS WindowWinApi::Init(const WindowParams* GenericParams)
 
     SetDPIAwareness();
 
-    MultiByteToWideChar(CP_UTF8, 0, Params->Title.c_str(), (int)Params->Title.size(), szTitle, MAX_LOADSTRING);
+    MultiByteToWideChar(CP_UTF8, 0, Desc->Title.c_str(), (int)Desc->Title.size(), szTitle, MAX_LOADSTRING);
     wsprintf(szWindowClass, L"SampleAppWindowClass");
 
     CycloneRegisterWindowClass(m_hInstance);
 
-    if (!CycloneCreateWindow(m_hInstance, m_Width, m_Height, cmdShowFlag, &m_hWnd))
+    if (!CycloneCreateWindow(m_hInstance, m_Width, m_Height, CmdShowFlag, &m_hWnd))
     {
         return C_STATUS::C_STATUS_ERROR;
     }

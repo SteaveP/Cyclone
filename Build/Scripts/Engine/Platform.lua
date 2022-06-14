@@ -17,6 +17,8 @@ function IncludeEnginePlatforms()
 			["Windows/*"] = { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
 		}
 
+		includedirs { EnginePath("Platform/Windows") }
+
 		-- ImGui platform integration
 		AddImGuiDependency()
 		files {

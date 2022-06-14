@@ -1,11 +1,22 @@
 #include "PlatformWinModule.h"
-#include "Engine/Platform/Windows/PlatformWin.h"
+#include "PlatformWin.h"
+#include "UI/ImGuiPlatformWin.h"
 
 namespace Cyclone
 {
 
 // global instance
 static PlatformWin GPlatformFactoryWin;
+
+IModule* CreatePlatformModule()
+{
+    return new PlatformWinModule();
+}
+
+ImGUIPlatform* CreateImGUIPlatform()
+{
+    return new ImGUIPlatformWin();
+}
 
 C_STATUS PlatformWinModule::OnRegister()
 {

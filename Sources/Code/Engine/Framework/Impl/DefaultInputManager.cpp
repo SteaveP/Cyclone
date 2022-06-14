@@ -3,6 +3,8 @@
 #include "Engine/Framework/IApplication.h"
 #include "Engine/Engine.h"
 
+#include "Engine/UI/ImGui/CommonImGui.h"
+
 namespace Cyclone
 {
 
@@ -25,9 +27,15 @@ C_STATUS DefaultInputManager::Init(IApplication* App)
 void DefaultInputManager::OnFrame()
 {
     // check flags
-    // #todo_input #todo_fixme
-    bool IsUpdateMouse      = true; //ImGui::GetIO().WantCaptureMouse == false;
-    bool IsUpdateKeyboard   = true; //ImGui::GetIO().WantCaptureKeyboard == false;
+    bool IsUpdateMouse      = true;
+    bool IsUpdateKeyboard   = true;
+
+    // #todo move implementation to UISubsystem
+    if (ImGui::GetCurrentContext() != nullptr)
+    {
+        IsUpdateMouse    = ImGui::GetIO().WantCaptureMouse == false;
+        IsUpdateKeyboard = ImGui::GetIO().WantCaptureKeyboard == false;
+    }
 
     // update current state if needed
     if (IsUpdateMouse)

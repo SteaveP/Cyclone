@@ -16,6 +16,8 @@ function IncludeEngineRenderPlatformDX12()
 				EnginePath("Render/Backend/DX12/**.h"),
 				EnginePath("Render/Backend/DX12/**.cpp"),
 			}
+			
+			removefiles {EnginePath("Render/Backend/DX12/Modules/**")}
 
 			vpaths {
 				["Code/*"] 		 = {EnginePath("Render/Backend/DX12/**")},
@@ -56,8 +58,8 @@ function IncludeEngineRenderPlatformDX12()
 				SetupRenderBackendProject(BackendName)
 				
 				files {
-					EnginePath("Render/Backend/DX12/DX12ShaderCompiler/**.h"),
-					EnginePath("Render/Backend/DX12/DX12ShaderCompiler/**.cpp"),
+					EnginePath("Render/Backend/DX12/Modules/DX12ShaderCompiler/**.h"),
+					EnginePath("Render/Backend/DX12/Modules/DX12ShaderCompiler/**.cpp"),
 				}
 
 				links { "dxcompiler.lib" }

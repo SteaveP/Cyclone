@@ -8,14 +8,14 @@ namespace Cyclone
 
 class IWindow;
 class IPlatform;
-class IUIModule;
+class IUISubsystem;
 
 class ENGINE_API ImGUIPlatform
 {
 public:
     ~ImGUIPlatform() = default;
 
-    virtual C_STATUS OnInit(void* Instance, IUIModule* UIModule, IPlatform* Platform, IWindow* window) = 0;
+    virtual C_STATUS OnInit(void* Instance, IUISubsystem* UIModule, IPlatform* Platform, IWindow* window) = 0;
     virtual C_STATUS OnFrame(void* Instance) = 0;
     virtual C_STATUS OnRender(void* Instance) = 0;
     virtual C_STATUS OnWindowMessage(void* Instance, void* DataPtr) = 0;

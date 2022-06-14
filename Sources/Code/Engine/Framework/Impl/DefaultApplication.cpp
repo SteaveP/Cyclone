@@ -1,11 +1,14 @@
 #include "DefaultApplication.h"
 
+#include "Engine/Core/Types.h"
+
 #include "Engine/Framework/IPlatform.h"
 #include "Engine/Framework/IRendererFactory.h"
 #include "Engine/Framework/IRenderer.h"
 #include "Engine/Framework/ISceneRenderer.h"
 #include "Engine/Framework/IInputHandler.h"
-#include "Engine/Framework/IUIModule.h"
+#include "Engine/Framework/IUISubsystem.h"
+#include "Engine/Framework/IModule.h"
 
 #include "Engine/Framework/Impl/DefaultInputManager.h"
 
@@ -73,8 +76,9 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
         auto Window = m_Windows[i];
         if (Window)
         {
-            WindowParams WindowParams{};
+            WindowDesc WindowParams{};
             WindowParams.App = this;
+            WindowParams.PlatformDataPtr = Desc.PlatformStartupDataPtr;
             WindowParams.Width = 1920;
             WindowParams.Height = 1080;
             WindowParams.Title = Desc.WindowCaption.empty() ? "Cyclone's Sample" : Desc.WindowCaption;
@@ -144,6 +148,8 @@ void DefaultApplication::DeInit()
     m_Platform = nullptr;
 
     m_IsInit = false;
+    
+    GEngineUnRegisterAllModules();
 }
 
 int DefaultApplication::Run()

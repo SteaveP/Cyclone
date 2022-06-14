@@ -17,7 +17,7 @@ struct WindowMessageParamWin
     LPARAM lParam;
 };
 
-struct WinApiWindowParams : public WindowParams
+struct WinApiWindowParams
 {
     HINSTANCE hInstance;
     int nCmdShow;
@@ -29,7 +29,7 @@ public:
     WindowWinApi();
     virtual ~WindowWinApi();
 
-    virtual C_STATUS Init(const WindowParams* Params) override;
+    virtual C_STATUS Init(const WindowDesc* Params) override;
     virtual void Deinit() override;
 
     virtual C_STATUS UpdateMessageQueue() override;

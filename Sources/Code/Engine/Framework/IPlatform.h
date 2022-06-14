@@ -8,6 +8,8 @@
 namespace Cyclone
 {
 
+class IModule;
+
 class ENGINE_API IPlatform
 {
 public:
@@ -16,6 +18,9 @@ public:
     using OnDPIChangedCallback    = std::function<C_STATUS(float newDPI, float oldDPI)>; //C_STATUS(*)(float, float);
 
 public:
+    DISABLE_COPY_ENABLE_MOVE(IPlatform);
+
+    IPlatform() = default;
     virtual ~IPlatform() = default;
 
     virtual UniquePtr<IWindow> CreateWindowPtr() = 0;
@@ -31,6 +36,5 @@ public:
 
 ENGINE_API IPlatform* GEngineGetCurrentPlatform();
 ENGINE_API void GEngineSetCurrentPlatform(IPlatform* Platform);
-
 
 } // namespace Cyclone

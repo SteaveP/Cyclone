@@ -8,8 +8,8 @@ namespace Cyclone
 // #todo_math
 struct Vec2
 {
-    float X;
-    float Y;
+    float X = 0.f;
+    float Y = 0.f;
 
     bool operator == (const Vec2& other) const noexcept
     {
@@ -18,9 +18,9 @@ struct Vec2
 };
 struct Vec3
 {
-    float X;
-    float Y;
-    float Z;
+    float X = 0.f;
+    float Y = 0.f;
+    float Z = 0.f;
 
     bool operator == (const Vec3& other) const noexcept
     {
@@ -30,10 +30,10 @@ struct Vec3
 
 struct Vec4
 {
-    float X;
-    float Y;
-    float Z;
-    float W;
+    float X = 0.f;
+    float Y = 0.f;
+    float Z = 0.f;
+    float W = 0.f;
 
     bool operator == (const Vec4& other) const noexcept
     {

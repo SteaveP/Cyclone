@@ -1,9 +1,9 @@
 #include "PlatformIndependentMain.h"
 
+#include "Engine/Framework/IUISubsystem.h"
 #include "Engine/Framework/Impl/DefaultApplication.h"
 #include "Engine/Framework/Impl/DefaultInputManager.h"
 #include "Engine/Render/Renderer.h"
-#include "Engine/UI/ImGui/ImGuiModule.h"
 
 #include "Engine/Framework/IPlatform.h"
 
@@ -26,7 +26,7 @@ int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainE
     Params.Platform = GEngineGetCurrentPlatform();
     Params.Renderer = std::move(DefaultRenderer);
     Params.InputManager = std::make_shared<DefaultInputManager>();
-    Params.UIModule = GEngineGetCurrentUIModule();
+    Params.UIModule = GEngineGetCurrentUISubsystem();
     Params.PlatformStartupDataPtr = PlatformDataPtr;
 
     if (Params.WindowCaption.empty())

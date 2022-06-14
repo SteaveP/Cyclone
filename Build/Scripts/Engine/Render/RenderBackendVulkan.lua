@@ -27,6 +27,8 @@ function IncludeEngineRenderPlatformVulkan()
 				EnginePath("Render/Backend/Vulkan/**.cpp"),
 			}
 			
+			removefiles {EnginePath("Render/Backend/Vulkan/Modules/**")}
+			
 			vpaths {
 				["Code/*"] = {EnginePath("Render/Backend/Vulkan/**")},
 			}

@@ -4,6 +4,9 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <array>
+#include <optional>
+#include <unordered_map>
 
 namespace Cyclone
 {
@@ -31,5 +34,13 @@ using UniquePtr = std::unique_ptr<T>;
 template<typename T>
 using Vector = std::vector<T>;
 
+template<typename K, typename V, typename Hasher = std::hash<K>>
+using HashMap = std::unordered_map<K, V, Hasher>;
+
+template<typename T, uint32 COUNT>
+using Array = std::array<T, COUNT>;
+
+template<typename T>
+using Optional = std::optional<T>;
 
 } // namespace Cyclone

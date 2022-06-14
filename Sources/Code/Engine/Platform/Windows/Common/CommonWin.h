@@ -11,5 +11,5 @@
 #include "Engine/Core/Types.h"
 
 // This module
-#include "Engine/Platform/Windows/PlatformWinModule.h"
+#include "Engine/Platform/Windows/PlatformWinModuleDefines.h"
 

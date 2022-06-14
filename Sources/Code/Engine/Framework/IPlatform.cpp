@@ -14,7 +14,8 @@ IPlatform* GEngineGetCurrentPlatform()
 
 void GEngineSetCurrentPlatform(IPlatform* Platform)
 {
-    CASSERT(GCurrentPlatform == nullptr);
+    // #todo callback OnPlatformChanged?
+    CASSERT(Platform == nullptr || GCurrentPlatform == nullptr);
     GCurrentPlatform = Platform;
 }
 

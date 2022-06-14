@@ -1,27 +1,25 @@
 #pragma once
 
+#include "PlatformWinModuleDefines.h"
 #include "Engine/Framework/IModule.h"
 #include "Engine/Core/Helpers.h"
-
-#ifdef DYNAMIC_LIB
-	#ifdef DYNAMIC_LIB_PLATFORMWIN
-		#define PLATFORMWIN_API DLL_EXPORT
-	#else
-		#define PLATFORMWIN_API DLL_IMPORT
-	#endif
-#else
-	#define PLATFORMWIN_API
-	#define PLATFORMWIN_API
-#endif
 
 namespace Cyclone
 {
 
-class PLATFORMWIN_API PlatformWinModule : public IModule
+class IPlatform;
+class ImGUIPlatform;
+
+class PlatformWinModule : public IModule
 {
 public:
+    PlatformWinModule() : IModule("PlatformWinModule") {}
+
     virtual C_STATUS OnRegister() override;
     virtual C_STATUS OnUnRegister() override;
 };
+
+PLATFORM_WIN_API IModule* CreatePlatformModule();
+PLATFORM_WIN_API ImGUIPlatform* CreateImGUIPlatform();
 
 } // namespace Cyclone

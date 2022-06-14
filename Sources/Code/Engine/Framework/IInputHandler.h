@@ -16,9 +16,12 @@ enum MouseKey
 
 // #todo_input key mappings to enum
 
-class IInputHandler
+class ENGINE_API IInputHandler
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(IInputHandler);
+
+    IInputHandler() = default;
     virtual ~IInputHandler() = default;
 
     virtual void OnKeyDown(int Key, bool PrevKeyState) = 0;
@@ -36,6 +39,9 @@ public:
 class IInputManager
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(IInputManager);
+
+    IInputManager() = default;
     virtual ~IInputManager() = default;
 
     virtual void OnFrame() = 0;

@@ -4,44 +4,44 @@
 #include "Engine/Framework/IModule.h"
 
 // #todo temporal workaround for modules loading
-#include "Engine/UI/ImGui/ImGuiModule.h"
+
+#define ADD_IMGUI_MODULE 1
+
+#if ADD_IMGUI_MODULE
+#include "Engine/UI/ImGui/ImGUIModule.h"
+#endif
 
 #if PLATFORM_WIN64
 #include "Engine/Platform/Windows/PlatformWinModule.h"
-#include "Engine/Platform/Windows/UI/ImGuiPlatformWin.h"
+#else
+#error Unsupported platform
 #endif
 
 #if RENDER_BACKEND_VULKAN
 #include "Engine/Render/Backend/Vulkan/RenderBackendVulkanModule.h"
-#endif
-
-#if RENDER_BACKEND_DX12
+#elif RENDER_BACKEND_DX12
 #include "Engine/Render/Backend/DX12/RenderBackendDX12Module.h"
+#else
+#error Unsupported render backend
 #endif
 
-Cyclone::MainEntryCallback LoadModuleMainCallback = [](int argc, char* argv[], void* PlatformDataPtr,
+Cyclone::MainEntryCallback LoadModuleMainCallback = [](int Argc, char* Argv[], void* PlatformDataPtr,
     Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
 {
-    C_UNREFERENCED(argc);
-    C_UNREFERENCED(argv);
+    C_UNREFERENCED(Argc);
+    C_UNREFERENCED(Argv);
     C_UNREFERENCED(PlatformDataPtr);
 
+    Cyclone::GEngineRegisterModule(Cyclone::CreatePlatformModule());
+    Cyclone::GEngineRegisterModule(Cyclone::CreateRenderBackendModule());
+
+#if ADD_IMGUI_MODULE
     Cyclone::ImGUIModule* ImGUIModulePtr = new Cyclone::ImGUIModule();
+    ImGUIModulePtr->SetPlatform(Cyclone::CreateImGUIPlatform());
     ImGUIModulePtr->SetRenderer(Cyclone::CreateImGUIRenderer());
-    Cyclone::GEngineSetCurrentUIModule(ImGUIModulePtr);
-
-#if PLATFORM_WIN64
-    Cyclone::GEngineRegisterModule(new Cyclone::PlatformWinModule());
-    ImGUIModulePtr->SetPlatform(new Cyclone::ImGUIPlatformWin());
+    Cyclone::GEngineRegisterModule(ImGUIModulePtr);
 #endif
 
-#if RENDER_BACKEND_VULKAN
-    Cyclone::GEngineRegisterModule(new Cyclone::RenderBackendVulkanModule());
-#endif
-
-#if RENDER_BACKEND_DX12
-    Cyclone::GEngineRegisterModule(new Cyclone::RenderBackendDX12Module());
-#endif
 };
 
 #endif // GENERATE_DEFAULT_MODULE_LOADER

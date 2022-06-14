@@ -16,8 +16,8 @@ ENGINE_API void GEngineRegisterModule(IModule* Module)
     {
         GModules.push_back(Module);
 
-        C_STATUS result = Module->OnRegister();
-        CASSERT(C_SUCCEEDED(result));
+        C_STATUS Result = Module->OnRegister();
+        CASSERT(C_SUCCEEDED(Result));
     }
 }
 ENGINE_API void GEngineUnRegisterModule(IModule* Module)
@@ -25,11 +25,22 @@ ENGINE_API void GEngineUnRegisterModule(IModule* Module)
     CASSERT(Module);
     if (Module)
     {
-        C_STATUS result = Module->OnUnRegister();
-        CASSERT(C_SUCCEEDED(result));
+        C_STATUS Result = Module->OnUnRegister();
+        CASSERT(C_SUCCEEDED(Result));
 
         GModules.erase(std::remove(GModules.begin(), GModules.end(), Module), GModules.end());
     }
+}
+
+ENGINE_API void GEngineUnRegisterAllModules()
+{
+    for (IModule* Module : GModules)
+    {
+        C_STATUS Result = Module->OnUnRegister();
+        CASSERT(C_SUCCEEDED(Result));
+    }
+
+    GModules.clear();
 }
 
 ENGINE_API void GEngineGetModules(IModule**& Modules, uint32_t& ModulesCount)

@@ -18,9 +18,11 @@ struct SceneRendererDesc
     IRenderer* renderer;
 };
 
-class ISceneRenderer
+class ENGINE_API ISceneRenderer
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(ISceneRenderer);
+
     virtual ~ISceneRenderer() = default;
 
     virtual C_STATUS Init(const SceneRendererDesc* desc) = 0;

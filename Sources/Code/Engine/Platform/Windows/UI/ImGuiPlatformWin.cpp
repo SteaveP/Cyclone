@@ -1,16 +1,16 @@
 #include "ImGuiPlatformWin.h"
-#include "../PlatformWin.h"
+#include "PlatformWin.h"
 
-#include "../Common/CommonWin.h"
-#include "../Window/WindowWin.h"
+#include "Common/CommonWin.h"
+#include "Window/WindowWin.h"
 
 #include "Engine/Platform/Windows/Window/WindowWin.h"
-#include "Engine/UI/ImGui/ImGuiModule.h"
+#include "Engine/UI/ImGui/ImGUISubsystem.h"
 
 #include "Engine/UI/ImGui/CommonImGui.h"
 #include "Thirdparty/ImGui/backends/imgui_impl_win32.h"
 
-//#define DISABLE_IMGUI
+#define ENABLE_IMGUI_IMPL_WIN 1
 
 // forward declaration
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -18,7 +18,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 namespace Cyclone
 {
 
-C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform* Platform, IWindow* Window)
+C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUISubsystem* UIModule, IPlatform* Platform, IWindow* Window)
 {
     m_Module = UIModule;
     CASSERT(m_Module);
@@ -26,7 +26,7 @@ C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform
     using namespace std::placeholders;
     Platform->SetOnWindowMessageCallback(std::bind(&ImGUIPlatformWin::OnWindowMessage, this, _1, _2));
 
-#ifndef DISABLE_IMGUI
+#if ENABLE_IMGUI_IMPL_WIN
     ImGuiContext* Context = reinterpret_cast<ImGuiContext*>(Instance);
     ImGui::SetCurrentContext(Context);
 
@@ -38,7 +38,7 @@ C_STATUS ImGUIPlatformWin::OnInit(void* Instance, IUIModule* UIModule, IPlatform
 
 C_STATUS ImGUIPlatformWin::OnFrame(void* Instance)
 {
-#ifndef DISABLE_IMGUI
+#if ENABLE_IMGUI_IMPL_WIN
     ImGui_ImplWin32_NewFrame();
 #endif
     return C_STATUS::C_STATUS_OK;
@@ -53,7 +53,7 @@ C_STATUS ImGUIPlatformWin::OnWindowMessage(void* Instance, void* DataPtr)
 {
     CASSERT(DataPtr);
 
-#ifndef DISABLE_IMGUI
+#if ENABLE_IMGUI_IMPL_WIN
 
     WindowMessageParamWin* Params = reinterpret_cast<WindowMessageParamWin*>(DataPtr);
 
@@ -68,7 +68,7 @@ C_STATUS ImGUIPlatformWin::OnWindowMessage(void* Instance, void* DataPtr)
 
 C_STATUS ImGUIPlatformWin::OnShutdown(void* Instance, IWindow* window)
 {
-#ifndef DISABLE_IMGUI
+#if ENABLE_IMGUI_IMPL_WIN
     ImGui_ImplWin32_Shutdown();
 #endif
     return C_STATUS::C_STATUS_OK;

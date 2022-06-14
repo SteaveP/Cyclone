@@ -1,38 +1,27 @@
 #pragma once
 
-#include "Engine/Framework/IUIModule.h"
-
-struct ImGuiContext;
+#include "Engine/Framework/IModule.h"
 
 namespace Cyclone
 {
 
-class ImGUIRenderer;
 class ImGUIPlatform;
+class ImGUIRenderer;
 
-// #todo_ui should be IModule also?
-class ENGINE_API ImGUIModule : public IUIModule
+class ENGINE_API ImGUIModule : public IModule
 {
 public:
-    ~ImGUIModule() = default;
+    ImGUIModule() : IModule("ImGUIModule") {}
 
-    void SetRenderer(ImGUIRenderer* Renderer) { m_renderer = Renderer; }
-    void SetPlatform(ImGUIPlatform* Platform) { m_platform = Platform; }
+    virtual C_STATUS OnRegister() override;
+    virtual C_STATUS OnUnRegister() override;
 
-    virtual C_STATUS Init(IApplication* app, float dpi = 96.f) override;
-    virtual void Shutdown() noexcept override;
-
-    virtual C_STATUS OnFrame() override;
-    virtual C_STATUS OnRender() override;
-
-    virtual C_STATUS OnWindowMessage(void* params) override;
-    virtual C_STATUS OnDPIChanged(float newDPI, float oldDPI) override;
+    void SetRenderer(ImGUIRenderer* Renderer) { m_Renderer = Renderer; }
+    void SetPlatform(ImGUIPlatform* Platform) { m_Platform = Platform; }
 
 protected:
-    IApplication* m_app = nullptr;
-    ImGuiContext* m_context = nullptr;
-    ImGUIRenderer* m_renderer = nullptr;
-    ImGUIPlatform* m_platform = nullptr;
+    ImGUIRenderer* m_Renderer = nullptr;
+    ImGUIPlatform* m_Platform = nullptr;
 };
 
 } // namespace Cyclone

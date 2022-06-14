@@ -9,19 +9,19 @@
     #include "DefaultModulesLoader.cpp"
 #endif
 
-Cyclone::MainEntryCallback MainCallback = [](int argc, char* argv[], void* PlatformDataPtr,
+Cyclone::MainEntryCallback MainCallback = [](int Argc, char* Argv[], void* PlatformDataPtr,
     Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
 {
-    C_UNREFERENCED(argc);
-    C_UNREFERENCED(argv);
+    C_UNREFERENCED(Argc);
+    C_UNREFERENCED(Argv);
     C_UNREFERENCED(PlatformDataPtr);
 
 #ifdef GENERATE_DEFAULT_MODULE_LOADER
-    LoadModuleMainCallback(argc, argv, PlatformDataPtr, App, AppParams);
+    LoadModuleMainCallback(Argc, Argv, PlatformDataPtr, App, AppParams);
 #endif
 
 #ifdef APPLICATION_CRATE_CALLBACK
-    APPLICATION_CRATE_CALLBACK(argc, argv, PlatformDataPtr, App, AppParams);
+    APPLICATION_CRATE_CALLBACK(Argc, Argv, PlatformDataPtr, App, AppParams);
 #endif
 };
 

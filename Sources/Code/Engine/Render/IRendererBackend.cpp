@@ -19,7 +19,8 @@ ENGINE_API Render::IRendererBackend* GEngineGetCurrentRenderBackend()
 
 ENGINE_API void GEngineSetCurrentRenderBackend(Render::IRendererBackend* RenderBackend)
 {
-    CASSERT(Render::GCurrentRenderBackend == nullptr);
+    // #todo callback OnRenderBackendChanged?
+    CASSERT(RenderBackend == nullptr || Render::GCurrentRenderBackend == nullptr);
     Render::GCurrentRenderBackend = RenderBackend;
 }
 

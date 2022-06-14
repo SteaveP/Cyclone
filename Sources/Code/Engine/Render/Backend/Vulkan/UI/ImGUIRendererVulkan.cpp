@@ -30,11 +30,11 @@ public:
 ImGUIRendererVulkan::ImGUIRendererVulkan() = default;
 ImGUIRendererVulkan::~ImGUIRendererVulkan() = default;
 
-C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUIModule* UIModule, Render::IRendererBackend* IBackend, IWindow* Window)
+C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* IBackend, IWindow* Window)
 {
     m_pimpl = std::make_unique<Pimpl>();
 
-    m_Module = UIModule;
+    m_UISubsystem = UISubsystem;
     m_Window = Window;
 
     m_pimpl->Backend = dynamic_cast<RenderBackendVulkan*>(IBackend);
@@ -201,6 +201,8 @@ C_STATUS ImGUIRendererVulkan::OnShutdown(void* Instance, IWindow* Window)
 #if ENABLE_IMGUI_IMPL_VULKAN
     ImGui_ImplVulkan_Shutdown();
 #endif
+
+    m_pimpl.reset();
 
     return C_STATUS::C_STATUS_OK;
 }

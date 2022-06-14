@@ -1,7 +1,7 @@
 #include "Engine/Engine.h"
 #include "EditorApp.h"
 
-static auto AppCreateCallback = [](int argc, char* argv[], void* PlatformDataPtr,
+static auto AppCreateCallback = [](int Argc, char* Argv[], void* PlatformDataPtr,
     Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
 {
     App = std::make_shared<Cyclone::EditorApplication>();

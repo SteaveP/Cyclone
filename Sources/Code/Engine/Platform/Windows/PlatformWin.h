@@ -1,12 +1,12 @@
 #pragma once
 
-#include "PlatformWinModule.h"
+#include "PlatformWinModuleDefines.h"
 #include "Engine/Framework/IPlatform.h"
 
 namespace Cyclone
 {
 
-class PLATFORMWIN_API PlatformWin : public IPlatform
+class PlatformWin : public IPlatform
 {
 public:
     virtual UniquePtr<IWindow> CreateWindowPtr() override;

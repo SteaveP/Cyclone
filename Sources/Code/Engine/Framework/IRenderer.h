@@ -9,16 +9,21 @@ namespace Cyclone
 
 namespace Render
 {
+
 class IRendererBackend;
-class IRendererBackendResource;
+class CRenderScene;
+class CRenderSceneView;
 class WindowContext;
 class CCommandQueue;
 enum class CommandQueueType;
+
 } // namespace Render
 
 class IWindow;
 class IApplication;
 class ISceneRenderer;
+class CSceneViewport;
+class CScene;
 
 struct RendererDesc
 {
@@ -34,11 +39,10 @@ struct RendererDesc
 class ENGINE_API IRenderer
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(IRenderer);
+
     IRenderer() = default;
     virtual ~IRenderer() = default;
-
-    IRenderer(const IRenderer& other) = delete;
-    IRenderer& operator = (const IRenderer& other) = delete;
 
     virtual C_STATUS Init(const RendererDesc* desc) = 0;
     virtual void Deinit() = 0;
@@ -58,6 +62,15 @@ public:
     virtual void WaitGPU() = 0;
 
     virtual Render::IRendererBackend* GetRendererBackend() = 0;
+
+    virtual Render::WindowContext* OnAddWindow(IWindow* Window) = 0;
+    virtual void OnRemoveWindow(IWindow* Window) = 0;
+
+    virtual Render::CRenderScene* AddScene(CScene* Scene) = 0;
+    virtual void RemoveScene(CScene* Scene) = 0;
+
+    virtual Render::CRenderSceneView* AddViewport(CSceneViewport* Viewport) = 0;
+    virtual void RemoveViewport(CSceneViewport* Viewport) = 0;
 
     virtual Render::WindowContext* GetWindowContext(IWindow* Window) = 0;
     virtual Render::WindowContext* GetDefaultWindowContext() = 0;

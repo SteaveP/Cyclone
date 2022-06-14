@@ -4,6 +4,8 @@
 
 #include "Engine/Startup/PlatformIndependentMain.h"
 #include "CommonWin.h"
+#include <shellapi.h>
+#include <cstdlib>
 
 struct PlatformData
 {
@@ -19,23 +21,31 @@ int APIENTRY wWinMain(
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    int argc = 0;
+    static const int MAX_ARGUMENTS = 32;
+    static const int MAX_ARGUMENT_LENGTH = 256;
 
-    // #todo_win
-    //char* argv = CommandLineToArgvW(lpCmdLine, &argc);
-    char* argv[] = { 0 };
+    int Argc = 0;
+    char* Argv[MAX_ARGUMENTS];
 
-    PlatformData Data
+    char ArgvStorage[MAX_ARGUMENTS][MAX_ARGUMENT_LENGTH];
     {
-        hInstance,
-        nCmdShow
-    };
+        wchar_t** lpArgv = CommandLineToArgvW(lpCmdLine, &Argc);
+        CASSERT(Argc <= MAX_ARGUMENTS);
+        for (int i = 0; i < Argc; ++i)
+        {
+            size_t ConvertedCount = 0;
+            wcstombs_s(&ConvertedCount, ArgvStorage[i], lpArgv[i], MAX_ARGUMENT_LENGTH);
+            CASSERT(ConvertedCount <= MAX_ARGUMENT_LENGTH);
+            Argv[i] = ArgvStorage[i];
+        }
+
+        LocalFree(lpArgv);
+    }
+
+    PlatformData Data { hInstance, nCmdShow };
 
     // MainCallback should be included before including this file in the caller
-    int result = Cyclone::PlatformIndependentMain(argc, argv, &Data, MainCallback);
-
-    // #todo_win
-    //LocalFree(argv);
-    
+    int result = Cyclone::PlatformIndependentMain(Argc, Argv, &Data, MainCallback);
+        
     return result;
 }

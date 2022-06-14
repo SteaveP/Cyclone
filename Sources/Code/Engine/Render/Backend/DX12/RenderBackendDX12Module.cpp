@@ -7,6 +7,11 @@
 namespace Cyclone
 {
 
+IModule* CreateRenderBackendModule()
+{
+    return new RenderBackendDX12Module();
+}
+
 namespace Render
 {
 

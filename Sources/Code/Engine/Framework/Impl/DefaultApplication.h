@@ -13,7 +13,7 @@ class DefaultInputManager;
 struct ENGINE_API DefaultApplicationParams
 {
     IPlatform* Platform = nullptr;
-    IUIModule* UIModule = nullptr;
+    IUISubsystem* UIModule = nullptr;
     uint32 WindowsCount = 1;
     Ptr<IRenderer> Renderer;
     Ptr<DefaultInputManager> InputManager;
@@ -39,7 +39,7 @@ public:
     virtual uint32 GetWindowsCount() const { return static_cast<uint32>(m_Windows.size()); }
     virtual IRenderer* GetRenderer() override { return m_Renderer.get(); }
 
-    virtual IUIModule* GetUI() override { return m_UI; } // #todo refactor
+    virtual IUISubsystem* GetUI() override { return m_UI; } // #todo refactor
 
     virtual IInputHandler* GetInputHandler() override;
     virtual IInputManager* GetInputManager() override;
@@ -70,7 +70,7 @@ protected:
     double m_Dt;
 
     IPlatform* m_Platform;
-    IUIModule* m_UI;
+    IUISubsystem* m_UI;
 
     Vector<Ptr<IWindow>> m_Windows;
     Ptr<IRenderer> m_Renderer;

@@ -23,11 +23,11 @@ public:
 ImGUIRendererDX12::ImGUIRendererDX12() = default;
 ImGUIRendererDX12::~ImGUIRendererDX12() = default;
 
-C_STATUS ImGUIRendererDX12::OnInit(void* Instance, IUIModule* UIModule, Render::IRendererBackend* IBackend, IWindow* Window)
+C_STATUS ImGUIRendererDX12::OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* IBackend, IWindow* Window)
 {
     m_pimpl = std::make_unique<Pimpl>();
 
-    m_module = UIModule;
+    m_UISubsystem = UISubsystem;
     m_Window = Window;
 
     m_pimpl->Backend = dynamic_cast<RenderBackendDX12*>(IBackend);
@@ -93,6 +93,8 @@ C_STATUS ImGUIRendererDX12::OnShutdown(void* Instance, IWindow* Window)
 #if ENABLE_IMGUI
     ImGui_ImplDX12_Shutdown();
 #endif
+
+    m_pimpl.reset();
 
     return C_STATUS::C_STATUS_OK;
 }

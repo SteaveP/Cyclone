@@ -11,11 +11,13 @@ class IRenderer;
 class IWindow;
 class IInputManager;
 class IInputHandler;
-class IUIModule;
+class IUISubsystem;
 
 class ENGINE_API IApplication
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(IApplication);
+    
     IApplication() = default;
     virtual ~IApplication() = default;
 
@@ -26,7 +28,7 @@ public:
     virtual uint32 GetWindowsCount() const = 0;
     virtual IRenderer* GetRenderer() = 0;
 
-    virtual IUIModule* GetUI() = 0;
+    virtual IUISubsystem* GetUI() = 0;
 
     virtual double GetDeltaTime() const = 0;
 

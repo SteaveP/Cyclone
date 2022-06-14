@@ -1,15 +1,29 @@
-#include "RenderBackendVkModule.h"
-#include "Engine/Render/Backend/Vulkan/RenderBackendVk.h"
+#include "RenderBackendVulkanModule.h"
+#include "Engine/Render/Backend/Vulkan/RenderBackendVulkan.h"
 
-#include "Engine/Render/Backend/Vulkan/Common/CommonVulkan.h"
+#include "Engine/Render/Backend/Vulkan/CommonVulkan.h"
+
+#include "UI/ImGUIRendererVulkan.h"
 
 namespace Cyclone
 {
 
+IModule* CreateRenderBackendModule()
+{
+    return new RenderBackendVulkanModule();
+}
+
 namespace Render
 {
-    static RenderBackendVulkan GRenderBackendVulkan{};
+
+static RenderBackendVulkan GRenderBackendVulkan{};
+
 } // namespace Render
+
+ImGUIRenderer* CreateImGUIRenderer()
+{
+    return new Render::ImGUIRendererVulkan();
+}
 
 C_STATUS RenderBackendVulkanModule::OnRegister()
 {

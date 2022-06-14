@@ -12,7 +12,7 @@ public:
 	ImGUIRendererVulkan();
 	~ImGUIRendererVulkan();
 
-	C_STATUS OnInit(void* Instance, IUIModule* UIModule, Render::IRendererBackend* Backend, IWindow* Window) override;
+	C_STATUS OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* Backend, IWindow* Window) override;
 	C_STATUS OnFrame(void* Instance) override;
 	C_STATUS OnRender(void* Instance) override;
 	C_STATUS OnShutdown(void* Instance, IWindow* Window) override;
@@ -20,7 +20,7 @@ public:
 private:
 	class Pimpl;
 	UniquePtr<Pimpl> m_pimpl;
-	IUIModule* m_Module = nullptr;
+	IUISubsystem* m_UISubsystem = nullptr;
 	IWindow* m_Window = nullptr;
 };
 

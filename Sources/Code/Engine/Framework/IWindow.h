@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Core/ErrorCodes.h"
+#include "Engine/EngineModule.h"
 #include "Engine/Core/Types.h"
 
 namespace Cyclone
@@ -8,23 +8,28 @@ namespace Cyclone
 
 class IApplication;
 
-struct WindowParams
+struct WindowDesc
 {
     IApplication* App;
     int Width;
     int Height;
+
+    void* PlatformDataPtr = nullptr; // #todo_fixme
 
     String Title;
 };
 
 typedef void* PlatformWindowHandle;
 
-class IWindow
+class ENGINE_API IWindow
 {
 public:
+    DISABLE_COPY_ENABLE_MOVE(IWindow);
+
+    IWindow() = default;
     virtual ~IWindow() = default;
 
-    virtual C_STATUS Init(const WindowParams* Params) = 0;
+    virtual C_STATUS Init(const WindowDesc* Params) = 0;
     virtual void Deinit() = 0;
 
     virtual C_STATUS UpdateMessageQueue() = 0;
