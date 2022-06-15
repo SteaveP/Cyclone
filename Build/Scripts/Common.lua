@@ -129,7 +129,7 @@ function SetupDefaultWorkspaceState()
     callingconvention "FastCall"
     
     flags { "MultiProcessorCompile" }
-    cppdialect "c++17"
+    cppdialect "c++20"
     staticruntime "Off"
 
     -- temp workaround
