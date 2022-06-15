@@ -26,3 +26,6 @@
 	path = Sources/ThirdParty/Render/DX12/D3D12MemoryAllocator
 	branch = master
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git
+[submodule "Sources/ThirdParty/Render/Vulkan/Volk"]
+	path = Sources/ThirdParty/Render/Vulkan/Volk
+	url = https://github.com/zeux/volk.git

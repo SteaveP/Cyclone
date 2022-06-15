@@ -36,7 +36,7 @@ function IncludeEngineRenderPlatformVulkan()
 			includedirs { EnginePath("Render/Backend/Vulkan") }
 			includedirs { RelativeVulkanSDKPath("Include") }
 			libdirs { RelativeVulkanSDKPath("Lib") }
-			links { "vulkan-1" }
+			links { "vulkan-1" } -- #todo make dynamic Vulkan Function Pointers loading (Volk lib, https://gpuopen.com/learn/reducing-vulkan-api-call-overhead/)
 
 			AddEngineDependencyInternal()
 
@@ -60,6 +60,6 @@ function IncludeEngineRenderPlatformVulkan()
 			filter {}			
 			includedirs { SourcesPath("ThirdParty/Render/Vulkan/VulkanMemoryAllocator/include/") }
 			
-			vpaths { ["Code/MemoryAllocator/ThirdParty/*"] = { SourcesPath("ThirdParty/Render/Vulkan/VulkanMemoryAllocator/**") } }
+			vpaths { ["Code/Internal/MemoryAllocator/ThirdParty/*"] = { SourcesPath("ThirdParty/Render/Vulkan/VulkanMemoryAllocator/**") } }
 	PopGroup()
 end
