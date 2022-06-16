@@ -1,7 +1,7 @@
 --------------------------------------------------------------------
 -- Folder structure management
 --------------------------------------------------------------------
-ApplicationDir = path.join(_SCRIPT_DIR, "../..")
+ApplicationDir = path.join(_SCRIPT_DIR, "../../..")
 ApplicationIntermediateDir = path.join(ApplicationDir, "Intermediate/Build")
 ApplicationSourceDir = path.join(ApplicationDir, "Sources")
 

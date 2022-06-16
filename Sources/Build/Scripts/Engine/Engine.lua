@@ -7,7 +7,7 @@ function AddEngineDependencyInternal()
 	links "Engine"
 	
 	-- #todo do this only if Engine was build as SharedLib (need to check Premake sources to see how to do it)
-	--defines { "IMGUI_API=__declspec(dllimport)" }
+	defines { "IMGUI_API=__declspec(dllimport)" }
 	defines { "IMGUI_IMPL_API=" }
 end
 
@@ -50,7 +50,7 @@ function IncludeImGui()
 		SourcesPath("ThirdParty/ImGui/imstb_textedit.h"),
 		SourcesPath("ThirdParty/ImGui/imstb_truetype.h"),
 		SourcesPath("ThirdParty/ImGui/imgui.cpp"),
-		SourcesPath("ThirdParty/ImGui/imgui_demo.cpp"),
+		--SourcesPath("ThirdParty/ImGui/imgui_demo.cpp"),
 		SourcesPath("ThirdParty/ImGui/imgui_draw.cpp"),
 		SourcesPath("ThirdParty/ImGui/imgui_tables.cpp"),
 		SourcesPath("ThirdParty/ImGui/imgui_widgets.cpp"),

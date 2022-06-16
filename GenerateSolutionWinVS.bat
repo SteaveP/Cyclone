@@ -1,5 +1,5 @@
 @ECHO OFF
-echo Build
-PUSHD "Build/"
+echo Creating Cyclone Projects..
+PUSHD "Sources/Build/"
 premake5.exe --file=premake5.lua vs2019
 POPD
