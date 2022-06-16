@@ -20,7 +20,7 @@
 namespace Cyclone::Render
 {
 
-static Vector<std::string> GVkPhysicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+static Vector<String> GVkPhysicalDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 WindowContextVulkan::WindowContextVulkan() = default;
 WindowContextVulkan::~WindowContextVulkan()
@@ -38,7 +38,6 @@ C_STATUS WindowContextVulkan::Init(IRenderer* Renderer, IWindow* Window)
     if (m_Backend == nullptr || m_Window == nullptr)
         return C_STATUS::C_STATUS_INVALID_ARG;
 
-    
     Result = CreateSurface(m_Window);
     C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result); 
 
@@ -46,11 +45,11 @@ C_STATUS WindowContextVulkan::Init(IRenderer* Renderer, IWindow* Window)
         DeviceCreationDesc Desc{};
         Desc.Surface = m_Surface;
         Desc.EnabledPhysicalDeviceExtensions = GVkPhysicalDeviceExtensions;
-        Result = m_Backend->GetGlobalContext().GetOrCreateDevice(Desc, m_Device);
+        Result = m_Backend->GetGlobalContext().GetOrCreateDevice(Desc, m_DeviceHandle);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
-        m_PhysDeviceHandleCache = m_Backend->GetGlobalContext().GetPhysicalDevice(m_Device).PhysicalDeviceHandle;
-        m_DeviceHandleCache = m_Backend->GetGlobalContext().GetLogicalDevice(m_Device).LogicalDeviceHandle;
+        m_PhysDeviceHandleCache = m_Backend->GetGlobalContext().GetPhysicalDevice(m_DeviceHandle).PhysicalDeviceHandle;
+        m_DeviceHandleCache = m_Backend->GetGlobalContext().GetLogicalDevice(m_DeviceHandle).LogicalDeviceHandle;
     }
 
     Result = CreateSwapchain();
@@ -150,7 +149,10 @@ C_STATUS WindowContextVulkan::CreateSwapchainImageViews()
 
     for (size_t i = 0; i < m_SwapchainImageViews.size(); ++i)
     {
-        m_SwapchainImageViews[i] = m_Backend->CreateImageView(m_Device, m_SwapchainImages[i], 1, m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_SwapchainImageViews[i] = m_Backend->CreateImageView(m_DeviceHandle, m_SwapchainImages[i], 1, m_SwapchainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+
+        m_BackBuffers[i]->RenderTargetView = MakeShared<CTextureView>();
+        m_BackBuffers[i]->RenderTargetView->PlatformDataPtr = m_SwapchainImageViews[i];
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -201,8 +203,8 @@ VkExtent2D WindowContextVulkan::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR&
 
 C_STATUS WindowContextVulkan::CreateSwapchain()
 {
-    const PhysicalDevice& Device = m_Backend->GetGlobalContext().GetPhysicalDevice(m_Device);
-    const LogicalDevice& LogicDevice = m_Backend->GetGlobalContext().GetLogicalDevice(m_Device);
+    const PhysicalDevice& Device = m_Backend->GetGlobalContext().GetPhysicalDevice(m_DeviceHandle);
+    const LogicalDevice& LogicDevice = m_Backend->GetGlobalContext().GetLogicalDevice(m_DeviceHandle);
 
     SwapChainSupportDetails SwapChainSupport =
         m_Backend->GetGlobalContext().QuerySwapChainSupport(Device.PhysicalDeviceHandle, m_Surface);
@@ -270,21 +272,26 @@ C_STATUS WindowContextVulkan::CreateSwapchain()
     {
         auto& BackBuffer = m_BackBuffers[i];
 
-        BackBuffer = std::make_shared<CRenderTarget>();
+        BackBuffer = MakeShared<CRenderTarget>();
         BackBuffer->Texture.reset(m_Backend->CreateTexture());
 
         CTextureDesc Desc{};
         Desc.Format = ConvertFormatType(CreateInfo.imageFormat);
-        Desc.Flags;
+        Desc.Flags = EResourceFlags::None;
         Desc.ImageType = EImageType::Type2D;
         Desc.Tiling = ETilingType::Optimal;
-        Desc.InitialLayout = EImageLayout::Undefined;
+        Desc.InitialLayout = EImageLayoutType::Undefined;
         Desc.Width = CreateInfo.imageExtent.width;
         Desc.Height = CreateInfo.imageExtent.height;
         Desc.Depth = 1;
         Desc.MipLevels = 1;
         Desc.ArrayCount = 1;
         Desc.SamplesCount = 1;
+        Desc.Backend = m_Backend;
+        Desc.DeviceHandle = m_DeviceHandle;
+#if ENABLE_DEBUG_RENDER_BACKEND
+        Desc.Name = "SwapChain Image " + ToString(i);
+#endif
 
         Desc.ExternalBackendResource = m_SwapchainImages[i];
         C_STATUS Result = BackBuffer->Texture->Init(Desc);
@@ -366,10 +373,10 @@ C_STATUS WindowContextVulkan::Present()
     }
 
     // #todo_vk
-    std::array<VkSemaphore, 20> WaitSemaphores;
+    Array<VkSemaphore, 20> WaitSemaphores;
     uint32_t WaitSemaphoresCount = 0;
 
-    const auto& Device = m_Backend->GetGlobalContext().GetLogicalDevice(m_Device);
+    const auto& Device = m_Backend->GetGlobalContext().GetLogicalDevice(m_DeviceHandle);
 
     auto* GraphicsQueue = Device.GetCommandQueue(CommandQueueType::Graphics);
     CASSERT(GraphicsQueue);
@@ -422,7 +429,7 @@ C_STATUS WindowContextVulkan::Present()
 
 void WindowContextVulkan::CheckCommandLists()
 {
-    const auto& Device = m_Backend->GetGlobalContext().GetLogicalDevice(m_Device);
+    const auto& Device = m_Backend->GetGlobalContext().GetLogicalDevice(m_DeviceHandle);
 
     Device.GetCommandQueue(CommandQueueType::Graphics)->OnBeginRender();
 }
@@ -449,7 +456,7 @@ void WindowContextVulkan::DestroySyncObjects()
 
 CommandQueueVulkan* WindowContextVulkan::GetCommandQueueVk(CommandQueueType QueueType) const
 {
-    return m_Backend->GetGlobalContext().GetLogicalDevice(m_Device).GetCommandQueue(QueueType);
+    return m_Backend->GetGlobalContext().GetLogicalDevice(m_DeviceHandle).GetCommandQueue(QueueType);
 }
 
 CCommandQueue* WindowContextVulkan::GetCommandQueue(CommandQueueType QueueType) const

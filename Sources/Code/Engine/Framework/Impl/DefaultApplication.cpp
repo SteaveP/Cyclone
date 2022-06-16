@@ -83,7 +83,7 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
             WindowParams.Height = 1080;
             WindowParams.Title = Desc.WindowCaption.empty() ? "Cyclone's Sample" : Desc.WindowCaption;
             if (i != 0)
-                WindowParams.Title += " " + std::to_string(i);
+                WindowParams.Title += " " + ToString(i);
 
             C_STATUS Result = Window->Init(&WindowParams);
             C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
@@ -98,7 +98,7 @@ C_STATUS DefaultApplication::Init(const DefaultApplicationParams& Desc)
 
         RendererDesc RendererDesc = RendererDesc;
             RendererDesc.SetApplication(this)
-            .SetWindows(std::move(Windows))
+            .SetWindows(MoveTemp(Windows))
             .SetFrameCount(2);
 
         Result = m_Renderer->Init(&RendererDesc);
@@ -295,12 +295,6 @@ C_STATUS DefaultApplication::Render()
 
         Result = m_Renderer->Render();
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
-
-        if (m_UI)
-        {
-            Result = m_UI->OnRender();
-            C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
-        }
 
         Result = m_Renderer->EndRender();
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);

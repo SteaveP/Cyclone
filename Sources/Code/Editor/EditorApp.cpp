@@ -7,6 +7,8 @@
 #include "Engine/Scene/Scene.h"
 #include "Engine/Scene/SceneViewport.h"
 
+#include "Engine/Render/SceneRenderer.h"
+
 namespace Cyclone
 {
 
@@ -14,13 +16,15 @@ C_STATUS EditorApplication::OnInit()
 {
     IRenderer* Renderer = GetRenderer();
     CASSERT(Renderer);
+    Render::CSceneRenderer* SceneRenderer = Renderer->GetSceneRenderer();
+    CASSERT(SceneRenderer);
 
     // #todo_editor refactor
     uint32 ViewportsCount = 2;
 
-    m_Scenes.emplace_back(std::make_shared<CScene>());
+    m_Scenes.emplace_back(MakeShared<CScene>());
     Ptr<CScene> Scene = m_Scenes.back();
-    Renderer->AddScene(Scene.get());
+    SceneRenderer->AddScene(Scene.get());
 
     CASSERT(m_Windows.size() > 0);
     Ptr<IWindow> Window = m_Windows[0];
@@ -29,15 +33,15 @@ C_STATUS EditorApplication::OnInit()
     for (uint32 i = 0; i < m_Viewports.size(); ++i)
     {
         auto& Viewport = m_Viewports[i];
-        Viewport = std::make_shared<CSceneViewport>();
+        Viewport = MakeShared<CSceneViewport>();
 
         Viewport->Window = Window;
         Viewport->Scene = Scene;
         Viewport->UpperLeftCorner = Vec2{ 100.f, 100.f };
         Viewport->BottomRightCorner = Vec2{ Window->GetWidth() - 100.f, Window->GetHeight() - 100.f };
-        Viewport->Camera = std::make_shared<CCamera>();
+        Viewport->Camera = MakeShared<CCamera>();
 
-        Renderer->AddViewport(Viewport.get());
+        SceneRenderer->AddViewport(Viewport.get());
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -145,22 +149,15 @@ void EditorApplication::ShowMenu()
 
 void EditorApplication::ShowViewports()
 {
-//     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-//     ImGui::SetNextWindowPos(viewport->WorkPos);
-//     ImGui::SetNextWindowSize(viewport->WorkSize);
-//     ImGui::SetNextWindowViewport(viewport->ID);
-//     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-//     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-
-
     for (uint32 i = 0; i < m_Viewports.size(); ++i)
     {
         auto& Viewport = m_Viewports[i];
-        String WindowName = "Viewport " + std::to_string(i);
-        if (ImGui::Begin(WindowName.c_str()))
+        String WindowName = "Viewport " + ToString(i);
+
+        if (ImGui::Begin(WindowName.c_str(), nullptr, ImGuiWindowFlags_NoBackground))
         {
-            //Viewport->UpperLeftCorner = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
-            //Viewport->BottomRightCorner= { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x , ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
+            Viewport->UpperLeftCorner = { ImGui::GetWindowPos().x, ImGui::GetWindowPos().y };
+            Viewport->BottomRightCorner= { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x , ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
         }
         ImGui::End();
     }

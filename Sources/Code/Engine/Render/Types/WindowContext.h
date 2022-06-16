@@ -41,14 +41,18 @@ public:
     uint32 GetCurrentLocalFrame() const { return m_CurrentLocalFrame; }
     uint32 GetCurrentImageIndex() const { return m_CurrentImageIndex; }
 
+    CDeviceHandle GetDeviceHandle() const { return m_DeviceHandle; }
+
 protected:
     IRenderer* m_Renderer = nullptr;
     IWindow* m_Window = nullptr;
 
+    CDeviceHandle m_DeviceHandle;
+
     uint32 m_CurrentLocalFrame = 0;
     uint32 m_CurrentImageIndex = 0;
 
-    std::vector<Ptr<CRenderTarget>> m_BackBuffers;
+    Vector<Ptr<CRenderTarget>> m_BackBuffers;
 
 };
 

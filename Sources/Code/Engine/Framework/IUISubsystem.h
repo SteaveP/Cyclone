@@ -6,6 +6,8 @@
 namespace Cyclone
 {
 
+namespace Render { class CCommandBuffer; }
+
 class IApplication;
 
 class ENGINE_API IUISubsystem
@@ -20,7 +22,7 @@ public:
     virtual void Shutdown() noexcept = 0;
 
     virtual C_STATUS OnFrame() = 0;
-    virtual C_STATUS OnRender() = 0;
+    virtual C_STATUS OnRender(Render::CCommandBuffer* CommandBuffer) = 0;
 
     virtual C_STATUS OnWindowMessage(void* Params) = 0;
     virtual C_STATUS OnDPIChanged(float NewDPI, float OldDPI) = 0;

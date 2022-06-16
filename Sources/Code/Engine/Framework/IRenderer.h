@@ -13,15 +13,22 @@ namespace Render
 class IRendererBackend;
 class CRenderScene;
 class CRenderSceneView;
+class CSceneRenderer;
 class CWindowContext;
 class CCommandQueue;
 enum class CommandQueueType;
+
+enum class RasterizerState;
+enum class BlendState;
+enum class DepthStencilState;
+class CRasterizerState;
+class CBlendState;
+class CDepthStencilState;
 
 } // namespace Render
 
 class IWindow;
 class IApplication;
-class ISceneRenderer;
 class CSceneViewport;
 class CScene;
 
@@ -31,7 +38,7 @@ struct RendererDesc
     IApplication* App;
     unsigned int FrameCount;
 
-    RendererDesc& SetWindows(Vector<IWindow*> W) { Windows = std::move(W); return *this; }
+    RendererDesc& SetWindows(Vector<IWindow*> W) { Windows = MoveTemp(W); return *this; }
     RendererDesc& SetApplication(IApplication* A) { App = A; return *this; }
     RendererDesc& SetFrameCount(int FrameCount) { FrameCount = FrameCount; return *this; }
 };
@@ -66,15 +73,15 @@ public:
     virtual Render::CWindowContext* OnAddWindow(IWindow* Window) = 0;
     virtual void OnRemoveWindow(IWindow* Window) = 0;
 
-    virtual Render::CRenderScene* AddScene(CScene* Scene) = 0;
-    virtual void RemoveScene(CScene* Scene) = 0;
-
-    virtual Render::CRenderSceneView* AddViewport(CSceneViewport* Viewport) = 0;
-    virtual void RemoveViewport(CSceneViewport* Viewport) = 0;
+    virtual Render::CSceneRenderer* GetSceneRenderer() = 0;
 
     virtual Render::CWindowContext* GetWindowContext(IWindow* Window) = 0;
     virtual Render::CWindowContext* GetDefaultWindowContext() = 0;
     virtual Render::CCommandQueue* GetDefaultCommandQueue(Render::CommandQueueType Type) = 0;
+
+    virtual Render::CRasterizerState* GetRasterizerState(Render::RasterizerState State) = 0;
+    virtual Render::CBlendState* GetBlendState(Render::BlendState State) = 0;
+    virtual Render::CDepthStencilState* GetDepthStencilState(Render::DepthStencilState State) = 0;
 };
 
 } // namespace Cyclone

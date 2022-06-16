@@ -9,6 +9,7 @@ namespace Cyclone::Render
 class CommandQueueVulkan;
 class RenderPassVk;
 class FrameBufferVk;
+class PipelineStateVk;
 
 class CCommandContextVulkan : public CCommandContext
 {
@@ -23,9 +24,10 @@ public:
     virtual void BeginRenderPass(CCommandBuffer* CommandBuffer, const CRenderPass& RenderPass) override;
     virtual void EndRenderPass(CCommandBuffer* CommandBuffer) override;
 
-protected:
-    RenderPassVk* GetOrCreateRenderPass(CommandBufferVulkan* CommandBufferVk, const CRenderPass& RenderPass);
-    FrameBufferVk* GetOrCreateFrameBuffer(CommandBufferVulkan* CommandBufferVk, const WindowContextVulkan* WindowContextVk, const CRenderPass& RenderPass);
+    virtual void SetIndexBuffer(CCommandBuffer* CommandBuffer, CBuffer* IndexBuffer, uint32 Offset) override;
+    virtual void SetVertexBuffer(CCommandBuffer* CommandBuffer, CBuffer* VertexBuffer, uint32 Slot, uint64 Offset) override;
+
+    virtual Ptr<CPipeline> SetPipeline(CCommandBuffer* CommandBuffer, const CPipelineDesc& Desc) override;
 
 protected:
     RenderBackendVulkan* m_BackendVk = nullptr;
@@ -33,9 +35,7 @@ protected:
 
     RenderPassVk* m_ActiveRenderPassVk = nullptr;
     FrameBufferVk* m_ActiveFrameBufferVk = nullptr;
-
-    HashMap<uint64, UniquePtr<RenderPassVk>> m_RenderPassCache;
-    HashMap<uint64, UniquePtr<FrameBufferVk>> m_FrameBufferCache;
+    PipelineStateVk* m_ActivePipelineState = nullptr;
 };
 
 class CommandBufferVulkan : public CCommandBuffer
@@ -50,6 +50,8 @@ public:
 
     virtual C_STATUS Begin() override;
     virtual void End() override;
+
+    virtual void Draw(uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, int32 VertexOffset, uint32 FirstInstance) override;
 
     VkCommandBuffer Get() const { return m_CommandBuffer; }
     VkCommandPool GetCommandPool() const { return m_CommandPool; }

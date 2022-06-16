@@ -17,7 +17,7 @@ public:
     CommandQueueVulkan() = default;
     ~CommandQueueVulkan();
 
-    virtual C_STATUS Init(RenderBackendVulkan* Backend, DeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex);
+    virtual C_STATUS Init(RenderBackendVulkan* Backend, CDeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex);
     virtual void DeInit() override;
 
     virtual C_STATUS OnBeginRender();
@@ -36,14 +36,14 @@ public:
     uint32_t GetQueueIndex() const { return m_queueIndex; }
 
     RenderBackendVulkan* GetBackendVk() const { return m_BackendVk; }
-    DeviceHandle GetDevice() const { return m_Device; }
+    CDeviceHandle GetDevice() const { return m_Device; }
 
 public:
     VkQueue m_Queue;
     CommandQueueType m_QueueType;
 
     RenderBackendVulkan* m_BackendVk;
-    DeviceHandle m_Device;
+    CDeviceHandle m_Device;
 
     uint32_t m_queueFamilyIndex;
     uint32_t m_queueIndex;

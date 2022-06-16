@@ -22,7 +22,7 @@ public:
     virtual void Shutdown() noexcept override;
 
     virtual C_STATUS OnFrame() override;
-    virtual C_STATUS OnRender() override;
+    virtual C_STATUS OnRender(Render::CCommandBuffer* CommandBuffer) override;
 
     virtual C_STATUS OnWindowMessage(void* Params) override;
     virtual C_STATUS OnDPIChanged(float NewDPI, float OldDPI) override;

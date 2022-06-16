@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonVulkan.h"
+#include "Internal/ResourceManagerVk.h"
 
 namespace Cyclone::Render
 {
@@ -14,9 +15,9 @@ struct SwapChainSupportDetails
 
 struct QueueFamilyIndices
 {
-    std::optional<uint32> GraphicsFamily;
-    std::optional<uint32> PresentFamily;
-    std::optional<uint32> AsyncComputeFamily; // optional
+    Optional<uint32> GraphicsFamily;
+    Optional<uint32> PresentFamily;
+    Optional<uint32> AsyncComputeFamily; // optional
 
     bool IsComplete();
 };
@@ -24,8 +25,14 @@ struct QueueFamilyIndices
 struct LogicalDevice
 {
     VkDevice LogicalDeviceHandle = VK_NULL_HANDLE;
+    VmaAllocator Allocator = VK_NULL_HANDLE;
+    UniquePtr<CResourceManagerVk> ResourceManager;
 
     Array<UniquePtr<CommandQueueVulkan>, uint32(CommandQueueType::Count)> CommandQueues;
+
+#if ENABLE_DEBUG_RENDER_BACKEND
+    PFN_vkSetDebugUtilsObjectNameEXT pfnSetDebugUtilsObjectNameEXT;
+#endif
 
     CommandQueueVulkan* GetCommandQueue(CommandQueueType QueueType) const { return CommandQueues[uint32(QueueType)].get(); }
 };
@@ -34,6 +41,9 @@ struct PhysicalDevice
 {
     VkPhysicalDevice PhysicalDeviceHandle = VK_NULL_HANDLE;
     VkSampleCountFlagBits MaxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    String Name;
+    VkPhysicalDeviceType DeviceType;
 
     Vector<LogicalDevice> LogicalDevices;
 };
@@ -63,9 +73,9 @@ public:
 
     VkInstance GetInstance() const { return m_Instance; }
 
-    C_STATUS GetOrCreateDevice(DeviceCreationDesc Desc, DeviceHandle& OutHandle);
-    const PhysicalDevice& GetPhysicalDevice(DeviceHandle Handle) const { return m_Devices[Handle.PhysicalDeviceHandle]; }
-    const LogicalDevice& GetLogicalDevice(DeviceHandle Handle) const { return GetPhysicalDevice(Handle).LogicalDevices[Handle.LogicalDeviceHandle]; }
+    C_STATUS GetOrCreateDevice(DeviceCreationDesc Desc, CDeviceHandle& OutHandle);
+    const PhysicalDevice& GetPhysicalDevice(CDeviceHandle Handle) const { return m_Devices[Handle.PhysicalDeviceHandle]; }
+    const LogicalDevice& GetLogicalDevice(CDeviceHandle Handle) const { return GetPhysicalDevice(Handle).LogicalDevices[Handle.LogicalDeviceHandle]; }
 
     SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice Device, VkSurfaceKHR Surface);
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice Device, VkSurfaceKHR Surface);
@@ -75,10 +85,10 @@ protected:
     void DestroyInstance();
 
     bool IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, Vector<String> PhysicalDeviceExtensions);
-    C_STATUS PickPhysicalDevice(DeviceCreationDesc Desc, DeviceHandle& OutHandle);
+    C_STATUS PickPhysicalDevice(DeviceCreationDesc Desc, CDeviceHandle& OutHandle);
 
     bool IsLogicalDeviceSuitable(VkPhysicalDevice PhysDevice, VkDevice Device, VkSurfaceKHR Surface);
-    C_STATUS CreateLogicalDevice(PhysicalDevice& PhysDevice, DeviceCreationDesc Desc, DeviceHandle& OutHandle);
+    C_STATUS CreateLogicalDevice(PhysicalDevice& PhysDevice, DeviceCreationDesc Desc, CDeviceHandle& OutHandle);
     void DestroyDevices();
     
     bool CheckDeviceExtensionSupport(VkPhysicalDevice Device, Vector<String> PhysicalDeviceExtensions);

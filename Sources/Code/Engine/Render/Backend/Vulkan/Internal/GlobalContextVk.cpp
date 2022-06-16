@@ -1,4 +1,4 @@
-#include "GlobalContextVulkan.h"
+#include "GlobalContextVk.h"
 
 #include "Engine/Framework/IApplication.h"
 #include "Engine/Framework/IWindow.h"
@@ -27,6 +27,10 @@ Vector<const char*> GVkInstanceExtensions = {
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #else
 #error unsupported platform
+#endif
+
+#if ENABLE_DEBUG_RENDER_BACKEND
+     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
 };
 
@@ -173,9 +177,9 @@ bool GlobalContextVulkan::CheckValidationlayerSupport()
     return true;
 }
 
-C_STATUS GlobalContextVulkan::GetOrCreateDevice(DeviceCreationDesc Desc, DeviceHandle& OutHandle)
+C_STATUS GlobalContextVulkan::GetOrCreateDevice(DeviceCreationDesc Desc, CDeviceHandle& OutHandle)
 {
-    OutHandle = DeviceHandle{};
+    OutHandle = CDeviceHandle{};
 
     // Check cache for physical device first
     for (uint32 i = 0; i < m_Devices.size(); ++i)
@@ -222,7 +226,7 @@ C_STATUS GlobalContextVulkan::GetOrCreateDevice(DeviceCreationDesc Desc, DeviceH
     return C_STATUS::C_STATUS_OK;
 }
 
-Cyclone::C_STATUS GlobalContextVulkan::PickPhysicalDevice(DeviceCreationDesc Desc, DeviceHandle& OutHandle)
+C_STATUS GlobalContextVulkan::PickPhysicalDevice(DeviceCreationDesc Desc, CDeviceHandle& OutHandle)
 {
     uint32_t DeviceCount = 0;
     vkEnumeratePhysicalDevices(GetInstance(), &DeviceCount, nullptr);
@@ -241,7 +245,13 @@ Cyclone::C_STATUS GlobalContextVulkan::PickPhysicalDevice(DeviceCreationDesc Des
 
             PhysDevice.PhysicalDeviceHandle = Device;
             PhysDevice.MaxMsaaSamples = GetMaxUsableMSAASampleCount(Device);
-            
+
+            VkPhysicalDeviceProperties PhysicalDeviceProperties{};
+            vkGetPhysicalDeviceProperties(Device, &PhysicalDeviceProperties);
+
+            PhysDevice.Name = PhysicalDeviceProperties.deviceName;
+            PhysDevice.DeviceType = PhysicalDeviceProperties.deviceType;
+
             return C_STATUS::C_STATUS_OK;
         }
     }
@@ -252,18 +262,18 @@ Cyclone::C_STATUS GlobalContextVulkan::PickPhysicalDevice(DeviceCreationDesc Des
 //////////////////////////////////////////////////////////////////////////
 
 
-C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, DeviceCreationDesc Desc, DeviceHandle& OutHandle)
+C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, DeviceCreationDesc Desc, CDeviceHandle& OutHandle)
 {
     QueueFamilyIndices Indices = FindQueueFamilies(PhysDevice.PhysicalDeviceHandle, Desc.Surface);
 
     Vector<VkDeviceQueueCreateInfo> QueueCreateInfos;
-    std::set<uint32_t> UniqueQueueIndices = { Indices.GraphicsFamily.value(), Indices.PresentFamily.value() };
+    Set<uint32> UniqueQueueIndices = { Indices.GraphicsFamily.value(), Indices.PresentFamily.value() };
 
     if (Indices.AsyncComputeFamily.has_value())
         UniqueQueueIndices.insert(Indices.AsyncComputeFamily.value());
 
     float QueuePriority = 1.f;
-    for (uint32_t QueueFamily : UniqueQueueIndices)
+    for (uint32 QueueFamily : UniqueQueueIndices)
     {
         VkDeviceQueueCreateInfo QueueCreateInfo{};
         QueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -272,7 +282,7 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
 
         QueueCreateInfo.pQueuePriorities = &QueuePriority;
 
-        QueueCreateInfos.emplace_back(std::move(QueueCreateInfo));
+        QueueCreateInfos.emplace_back(MoveTemp(QueueCreateInfo));
     }
 
     VkPhysicalDeviceFeatures PhysicalDeviceFeatures{};
@@ -297,8 +307,8 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
     OutHandle.LogicalDeviceHandle = static_cast<uint16>(PhysDevice.LogicalDevices.size());
     LogicalDevice& LogicDevice = PhysDevice.LogicalDevices.emplace_back();
 
-    VkResult Result = vkCreateDevice(PhysDevice.PhysicalDeviceHandle, &CreateInfo, nullptr, &LogicDevice.LogicalDeviceHandle);
-    C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
+    VkResult ResultVk = vkCreateDevice(PhysDevice.PhysicalDeviceHandle, &CreateInfo, nullptr, &LogicDevice.LogicalDeviceHandle);
+    C_ASSERT_VK_SUCCEEDED_RET(ResultVk, C_STATUS::C_STATUS_ERROR);
 
     // #todo_vk refactor #todo_move
     auto InitQueue = [&](CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
@@ -307,7 +317,7 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
         C_STATUS res = CommandQueue->Init(m_Backend, OutHandle, QueueType, QueueFamilyIndex, QueueIndex);
         CASSERT(C_SUCCEEDED(res));
 
-        LogicDevice.CommandQueues[(uint32_t)QueueType] = std::move(CommandQueue);
+        LogicDevice.CommandQueues[(uint32_t)QueueType] = MoveTemp(CommandQueue);
     };
 
     if (Indices.GraphicsFamily.has_value())
@@ -317,26 +327,47 @@ C_STATUS GlobalContextVulkan::CreateLogicalDevice(PhysicalDevice& PhysDevice, De
     if (Indices.AsyncComputeFamily.has_value())
         InitQueue(CommandQueueType::AsyncCompute, Indices.AsyncComputeFamily.value(), 0);
 
+    {
+        ResourceManagerVkDesc Desc{
+            .DeviceHandle = OutHandle
+        };
+        LogicDevice.ResourceManager = MakeUnique<CResourceManagerVk>();
+        C_STATUS Result = LogicDevice.ResourceManager->Init(m_Backend, Desc);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
+
+    // Allocator
+    {
+        VmaAllocatorCreateInfo Info{};
+        Info.instance = m_Instance;
+        Info.physicalDevice = PhysDevice.PhysicalDeviceHandle;
+        Info.device = LogicDevice.LogicalDeviceHandle;
+        Info.vulkanApiVersion = VK_API_VERSION_1_3;
+
+        VkResult Result = vmaCreateAllocator(&Info, &LogicDevice.Allocator);
+        C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
+    }
+
+#if ENABLE_DEBUG_RENDER_BACKEND
+    if (LogicDevice.pfnSetDebugUtilsObjectNameEXT == nullptr)
+    {
+        LogicDevice.pfnSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetDeviceProcAddr(
+            LogicDevice.LogicalDeviceHandle, "vkSetDebugUtilsObjectNameEXT");
+    }
+#endif
+
     return C_STATUS::C_STATUS_OK;
 }
 
 bool GlobalContextVulkan::IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSurfaceKHR Surface, Vector<std::string> PhysicalDeviceExtensions)
 {
-#if 0
-    VkPhysicalDeviceProperties DeviceProperties;
-    vkGetPhysicalDeviceProperties(Device, &DeviceProperties);
-
-    VkPhysicalDeviceFeatures DeviceFeatures;
-    vkGetPhysicalDeviceFeatures(Device, &DeviceFeatures);
-
-    return DeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
-        && DeviceFeatures.geometryShader;
-#else
-
     bool IsExtensionsSupported = CheckDeviceExtensionSupport(Device, PhysicalDeviceExtensions);
 
     VkPhysicalDeviceFeatures DeviceFeatures;
     vkGetPhysicalDeviceFeatures(Device, &DeviceFeatures);
+
+    VkPhysicalDeviceProperties DeviceProperties;
+    vkGetPhysicalDeviceProperties(Device, &DeviceProperties);
 
     bool IsSwapChainAdequate = false;
     if (IsExtensionsSupported)
@@ -345,9 +376,11 @@ bool GlobalContextVulkan::IsPhysicalDeviceSuitable(VkPhysicalDevice Device, VkSu
         IsSwapChainAdequate = !SwapChainSupport.Formats.empty() && !SwapChainSupport.PresentModes.empty();
     }
 
+    static bool IsDiscreteGPUPreferable = true;
+    bool IsPreferable = !IsDiscreteGPUPreferable || DeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+
     QueueFamilyIndices Indices = FindQueueFamilies(Device, Surface);
-    return Indices.IsComplete() && IsExtensionsSupported && IsSwapChainAdequate && DeviceFeatures.samplerAnisotropy;
-#endif
+    return IsPreferable && Indices.IsComplete() && IsExtensionsSupported && IsSwapChainAdequate && DeviceFeatures.samplerAnisotropy;
 }
 
 bool QueueFamilyIndices::IsComplete()
@@ -382,7 +415,8 @@ QueueFamilyIndices GlobalContextVulkan::FindQueueFamilies(VkPhysicalDevice Devic
         {
             Indices.GraphicsFamily = i;
         }
-        else if (!Indices.AsyncComputeFamily.has_value() && QueueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
+        
+        if (!Indices.AsyncComputeFamily.has_value() && QueueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
         {
             Indices.AsyncComputeFamily = i;
         }
@@ -467,7 +501,6 @@ bool GlobalContextVulkan::IsLogicalDeviceSuitable(VkPhysicalDevice PhysDevice, V
 {
     QueueFamilyIndices Indices = FindQueueFamilies(PhysDevice, Surface);
     return Indices.GraphicsFamily.has_value() && Indices.PresentFamily.has_value();
-
 }
 
 void GlobalContextVulkan::DestroyDevices()
@@ -481,6 +514,14 @@ void GlobalContextVulkan::DestroyDevices()
             {
                 Queue.reset();
             }
+            
+            // Allocator
+            {
+                vmaDestroyAllocator(LogicDevice.Allocator);
+                LogicDevice.Allocator = VK_NULL_HANDLE;
+            }
+
+            LogicDevice.ResourceManager.reset();
             vkDestroyDevice(LogicDevice.LogicalDeviceHandle, nullptr);
         }
 

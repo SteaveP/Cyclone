@@ -8,7 +8,11 @@ namespace Cyclone
 
 class IWindow;
 class IUISubsystem;
-namespace Render { class IRendererBackend; }
+namespace Render
+{ 
+    class IRendererBackend;
+    class CCommandBuffer;
+}
 
 class ENGINE_API ImGUIRenderer
 {
@@ -17,7 +21,7 @@ public:
 
     virtual C_STATUS OnInit(void* Instance, IUISubsystem* UISubsystem,  Render::IRendererBackend* Backend, IWindow* Window) = 0;
     virtual C_STATUS OnFrame(void* Instance) = 0;
-    virtual C_STATUS OnRender(void* Instance) = 0;
+    virtual C_STATUS OnRender(void* Instance, Render::CCommandBuffer* CommandBuffer) = 0;
     virtual C_STATUS OnShutdown(void* Instance, IWindow* Window) = 0;
 };
 

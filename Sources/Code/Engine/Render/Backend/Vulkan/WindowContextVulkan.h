@@ -33,7 +33,6 @@ public:
     RenderBackendVulkan* GetBackend() const { return m_Backend; }
     IWindow* GetWindow() const { return m_Window; }
 
-    DeviceHandle GetDevice() const { return m_Device; }
     VkPhysicalDevice GetPhysDevice() const { return m_PhysDeviceHandleCache; }
     VkDevice GetLogicDevice() const { return m_DeviceHandleCache; }
 
@@ -72,9 +71,8 @@ protected:
 protected:
     RenderBackendVulkan* m_Backend = nullptr;
 
-    DeviceHandle m_Device{};
-    VkPhysicalDevice m_PhysDeviceHandleCache;
-    VkDevice m_DeviceHandleCache;
+    VkPhysicalDevice m_PhysDeviceHandleCache = VK_NULL_HANDLE;
+    VkDevice m_DeviceHandleCache = VK_NULL_HANDLE;
 
     VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
     VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;

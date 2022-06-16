@@ -25,7 +25,7 @@ ImGUIRendererDX12::~ImGUIRendererDX12() = default;
 
 C_STATUS ImGUIRendererDX12::OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* IBackend, IWindow* Window)
 {
-    m_pimpl = std::make_unique<Pimpl>();
+    m_pimpl = MakeUnique<Pimpl>();
 
     m_UISubsystem = UISubsystem;
     m_Window = Window;

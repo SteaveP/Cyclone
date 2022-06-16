@@ -3,6 +3,7 @@
 #include "Engine/Framework/IUISubsystem.h"
 #include "Engine/Framework/Impl/DefaultApplication.h"
 #include "Engine/Framework/Impl/DefaultInputManager.h"
+#include "Engine/Render/IRendererBackend.h"
 #include "Engine/Render/Renderer.h"
 
 #include "Engine/Framework/IPlatform.h"
@@ -20,12 +21,12 @@ int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainE
         EntryCallback(argc, argv, PlatformDataPtr, App, Params);
     }
 
-    Ptr<Render::Renderer> DefaultRenderer = std::make_shared<Render::Renderer>();
+    Ptr<Render::Renderer> DefaultRenderer = MakeShared<Render::Renderer>();
     DefaultRenderer->PreInit(GEngineGetCurrentRenderBackend());
 
     Params.Platform = GEngineGetCurrentPlatform();
-    Params.Renderer = std::move(DefaultRenderer);
-    Params.InputManager = std::make_shared<DefaultInputManager>();
+    Params.Renderer = MoveTemp(DefaultRenderer);
+    Params.InputManager = MakeShared<DefaultInputManager>();
     Params.UIModule = GEngineGetCurrentUISubsystem();
     Params.PlatformStartupDataPtr = PlatformDataPtr;
 
@@ -33,7 +34,7 @@ int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainE
         Params.WindowCaption = "Cyclone's Window";
 
     if (App == nullptr)
-        App = std::make_shared<DefaultApplication>();
+        App = MakeShared<DefaultApplication>();
 
     if (App->Init(Params) == C_STATUS::C_STATUS_OK)
     {

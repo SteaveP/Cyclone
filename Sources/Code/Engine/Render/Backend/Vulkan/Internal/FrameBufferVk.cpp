@@ -3,6 +3,8 @@
 #include "RenderBackendVulkan.h"
 #include "RenderPassVk.h"
 
+#include "Engine/Render/Types/Texture.h"
+
 namespace Cyclone::Render
 {
 
@@ -12,22 +14,45 @@ FrameBufferVk::~FrameBufferVk()
     CASSERT(m_FrameBuffer == VK_NULL_HANDLE);
 }
 
-C_STATUS FrameBufferVk::Init(const FrameBufferVkInitInfo& InitInfo)
+C_STATUS FrameBufferVk::Init(CDeviceHandle DeviceHandle, RenderBackendVulkan* BackendVk, RenderPassVk* RenderPassVkPtr, const CRenderPass& RenderPass)
 {
     CASSERT(m_FrameBuffer == VK_NULL_HANDLE);
+    m_RenderPass = RenderPassVkPtr;
 
-    m_RenderPass = InitInfo.RenderPass;
+    CTexture* TextureRef = nullptr;
+    if (RenderPass.RenderTargetSet.RenderTargetsCount > 0)
+        TextureRef = RenderPass.RenderTargetSet.RenderTargets[0].RenderTarget->Texture.get();
+    if (TextureRef == nullptr && RenderPass.RenderTargetSet.DepthScentil.RenderTarget)
+        TextureRef = RenderPass.RenderTargetSet.DepthScentil.RenderTarget->Texture.get();
+    CASSERT(TextureRef);
 
     VkFramebufferCreateInfo FramebufferInfo{};
     FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    FramebufferInfo.renderPass = m_RenderPass->Get();
-    FramebufferInfo.attachmentCount = static_cast<uint32_t>(InitInfo.AttachmentsCount);
-    FramebufferInfo.pAttachments = InitInfo.Attachments.data();
-    FramebufferInfo.width = InitInfo.Width;
-    FramebufferInfo.height = InitInfo.Height;
-    FramebufferInfo.layers = InitInfo.Layers;
+    FramebufferInfo.renderPass = RenderPassVkPtr->Get();
 
-    VkDevice Device = InitInfo.Backend->GetGlobalContext().GetLogicalDevice(InitInfo.Device).LogicalDeviceHandle;
+    VkImageView Attachments[10]{};
+    uint32 AttachmentCount = RenderPass.RenderTargetSet.RenderTargetsCount 
+        + (RenderPass.RenderTargetSet.DepthScentil.RenderTarget ? 1 : 0);
+
+    for (uint32 i = 0; i < RenderPass.RenderTargetSet.RenderTargetsCount; ++i)
+    {
+        Attachments[i] = (VkImageView)RenderPass.RenderTargetSet.RenderTargets[i].RenderTarget->RenderTargetView->PlatformDataPtr;
+    }
+    if (RenderPass.RenderTargetSet.DepthScentil.RenderTarget)
+    {
+        Attachments[RenderPass.RenderTargetSet.RenderTargetsCount] = (VkImageView)RenderPass.RenderTargetSet.DepthScentil.RenderTarget->RenderTargetView->PlatformDataPtr;
+    }
+
+    FramebufferInfo.attachmentCount = AttachmentCount;
+    FramebufferInfo.pAttachments = Attachments;
+
+    FramebufferInfo.width = static_cast<uint32>(TextureRef->GetDesc().Width);
+    FramebufferInfo.height = TextureRef->GetDesc().Height;
+    FramebufferInfo.layers = 1;
+
+    m_RenderPass = RenderPassVkPtr;
+
+    VkDevice Device = BackendVk->GetGlobalContext().GetLogicalDevice(DeviceHandle).LogicalDeviceHandle;
     VkResult Result = vkCreateFramebuffer(Device, &FramebufferInfo, nullptr, &m_FrameBuffer);
     C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
 

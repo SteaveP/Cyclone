@@ -14,7 +14,7 @@ public:
 
 	C_STATUS OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* Backend, IWindow* Window) override;
 	C_STATUS OnFrame(void* Instance) override;
-	C_STATUS OnRender(void* Instance) override;
+	C_STATUS OnRender(void* Instance, CCommandBuffer* CommandBuffer) override;
 	C_STATUS OnShutdown(void* Instance, IWindow* Window) override;
 
 private:

@@ -29,10 +29,10 @@ public:
     // etc
 
     // #todo_vk check for duplicates
-    C_STATUS AddSceneView(Ptr<CRenderSceneView> SceneView) { m_Views.emplace_back(std::move(SceneView)); return C_STATUS::C_STATUS_OK; }
+    C_STATUS AddSceneView(Ptr<CRenderSceneView> SceneView) { m_Views.emplace_back(MoveTemp(SceneView)); return C_STATUS::C_STATUS_OK; }
 
 public:
-    CScene* m_Scene;
+    CScene* m_Scene = nullptr;
 
     Vector<Ptr<CRenderSceneView>> m_Views;
 };

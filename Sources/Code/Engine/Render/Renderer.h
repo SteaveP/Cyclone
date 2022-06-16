@@ -2,7 +2,6 @@
 
 #include "Engine/EngineModule.h"
 #include "Engine/Framework/IRenderer.h"
-#include "IRendererBackend.h"
 
 #include "Common.h"
 
@@ -45,27 +44,22 @@ public:
     virtual CWindowContext* OnAddWindow(IWindow* Window) override;
     virtual void OnRemoveWindow(IWindow* Window) override;
 
-    virtual CRenderScene* AddScene(CScene* Scene) override;
-    virtual void RemoveScene(CScene* Scene) override;
+    virtual CSceneRenderer* GetSceneRenderer() override;
 
-    virtual CRenderScene* GetRenderScene(CScene* Scene);
-
-    virtual CRenderSceneView* AddViewport(CSceneViewport* Viewport) override;
-    virtual void RemoveViewport(CSceneViewport* Viewport) override;
-
-    void RenderSceneView(CRenderSceneView* SceneView);
+    virtual CRasterizerState* GetRasterizerState(RasterizerState State) override;
+    virtual CBlendState* GetBlendState(BlendState State) override;
+    virtual CDepthStencilState* GetDepthStencilState(DepthStencilState State) override;
 protected:
     IRendererBackend* m_RendererBackend = nullptr;
     IApplication* m_App = nullptr;
-    Vector<IWindow*> m_Windows;
 
+    Vector<IWindow*> m_Windows;
     Vector<UniquePtr<CWindowContext>> m_WindowContexts;
+
+    UniquePtr<CSceneRenderer> m_SceneRenderer; // #todo_vk refactor
 
     uint32_t m_CurrentLocalFrame = 0;   // Local frame counter [0, MAX_FRAMES_IN_FLIGHT)
     uint32_t m_CurrentFrame = 0;        // Global frame counter
-
-    // #todo_vk move to separate file and class?
-    UniquePtr<CRenderScene> m_RenderScene;
 };
 
 } // namespace Cyclone::Render

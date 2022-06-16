@@ -27,7 +27,7 @@ protected:
 	void ShowContentBrowser();
 
 protected:
-    Vector<Ptr<CScene>> m_Scenes;
+    Vector<Ptr<CScene>> m_Scenes; // #todo_vk move to separate subsystem (!)
     Vector<Ptr<CSceneViewport>> m_Viewports;
 };
 

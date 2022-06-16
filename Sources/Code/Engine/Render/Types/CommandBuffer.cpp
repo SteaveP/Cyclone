@@ -24,7 +24,7 @@ void CCommandBuffer::End()
 void CCommandBuffer::SetRenderTargets(CRenderTargetSet RenderTargetSet)
 {
     CASSERT(false);
-    //m_Context->SetRenderTargets(std::move(RenderTargetSet));
+    //m_Context->SetRenderTargets(MoveTemp(RenderTargetSet));
 }
 
 void CCommandBuffer::BeginRenderPass(const CRenderPass& RenderPass)
@@ -37,7 +37,7 @@ void CCommandBuffer::EndRenderPass()
     m_Context->EndRenderPass(this);
 }
 
-void CCommandBuffer::Draw()
+void CCommandBuffer::Draw(uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, int32 VertexOffset, uint32 FirstInstance)
 {
 
 }
@@ -55,6 +55,21 @@ void CCommandBuffer::Copy()
 void CCommandBuffer::Clear()
 {
 
+}
+
+Ptr<CPipeline> CCommandBuffer::SetPipeline(const CPipelineDesc& Desc)
+{
+    return m_Context->SetPipeline(this, Desc);
+}
+
+void CCommandBuffer::SetIndexBuffer(CBuffer* IndexBuffer, uint32 Offset)
+{
+    return m_Context->SetIndexBuffer(this, IndexBuffer, Offset);
+}
+
+void CCommandBuffer::SetVertexBuffer(CBuffer* VertexBuffer, uint32 Slot, uint64 Offset)
+{
+    return m_Context->SetVertexBuffer(this, VertexBuffer, Slot, Offset);
 }
 
 C_STATUS CCommandContext::Init(IRenderer* Renderer, CCommandBuffer* CommandBuffer)
@@ -77,6 +92,12 @@ void CCommandContext::BeginRenderPass(CCommandBuffer* CommandBuffer, const CRend
 void CCommandContext::EndRenderPass(CCommandBuffer* CommandBuffer)
 {
 
+}
+
+Ptr<CPipeline> CCommandContext::SetPipeline(CCommandBuffer* CommandBuffer, const CPipelineDesc& Desc)
+{
+    CASSERT(false);
+    return nullptr;
 }
 
 } // namespace Cyclone::Render

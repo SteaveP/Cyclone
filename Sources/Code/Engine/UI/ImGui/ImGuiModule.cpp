@@ -18,7 +18,7 @@ C_STATUS ImGUIModule::OnRegister()
 
     CASSERT(GEngineGetCurrentUISubsystem() == nullptr);
 
-    UniquePtr<ImGUISubsystem> Subsystem = std::make_unique<ImGUISubsystem>();
+    UniquePtr<ImGUISubsystem> Subsystem = MakeUnique<ImGUISubsystem>();
     Subsystem->SetPlatform(m_Platform);
     Subsystem->SetRenderer(m_Renderer);
 

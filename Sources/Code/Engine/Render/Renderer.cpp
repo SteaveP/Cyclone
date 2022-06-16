@@ -1,12 +1,15 @@
 #include "Renderer.h"
 
 #include "Engine/Framework/IApplication.h"
-#include "Types/WindowContext.h"
-#include "RenderScene.h"
-#include "RenderSceneView.h"
+#include "Engine/Framework/IUISubsystem.h"
 
-#include "Engine/Scene/Scene.h"
-#include "Engine/Scene/SceneViewport.h"
+#include "IRendererBackend.h"
+#include "SceneRenderer.h"
+
+#include "Types/CommandQueue.h"
+#include "Types/CommandBuffer.h"
+#include "Types/WindowContext.h"
+#include "Types/Texture.h"
 
 namespace Cyclone::Render
 {
@@ -30,6 +33,10 @@ C_STATUS Renderer::Init(const RendererDesc* Desc)
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
+    m_SceneRenderer = MakeUnique<CSceneRenderer>();
+    C_STATUS Result = m_SceneRenderer->Init(this);
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
     for (uint32 i = 0; i < m_Windows.size(); ++i)
     {
         if (auto Window = m_Windows[i])
@@ -38,19 +45,28 @@ C_STATUS Renderer::Init(const RendererDesc* Desc)
         }
     }
 
-    m_RenderScene = std::make_unique<CRenderScene>();
-
     return C_STATUS::C_STATUS_OK;
 }
 
 void Renderer::Deinit()
 {
+    //while (!m_WindowContexts.empty())
+    //{
+    //    OnRemoveWindow(m_WindowContexts.back().get());
+    //}
+
     for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
     {
         if (auto& WindowContext = m_WindowContexts[i])
             WindowContext->Shutdown();
     }
     m_WindowContexts.clear();
+
+    if (m_SceneRenderer)
+    {
+        m_SceneRenderer->DeInit();
+    }
+    m_SceneRenderer.reset();
 
     if (m_RendererBackend)
     {
@@ -73,8 +89,8 @@ C_STATUS Renderer::BeginRender()
 {
     if (m_RendererBackend)
     {
-        C_STATUS result = m_RendererBackend->BeginRender();
-        C_ASSERT_RETURN_VAL(C_SUCCEEDED(result), result);
+        C_STATUS Result = m_RendererBackend->BeginRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
@@ -84,12 +100,10 @@ C_STATUS Renderer::BeginRender()
             return Result;
     }
 
-    auto& Scene = m_RenderScene;
-    for (uint32 SV = 0; SV < Scene->m_Views.size(); ++SV)
+    if (m_SceneRenderer)
     {
-        auto& SceneView = Scene->m_Views[SV];
-
-        //SceneView->BeginRender();
+        C_STATUS Result = m_SceneRenderer->BeginRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
     return C_STATUS::C_STATUS_OK;
@@ -97,16 +111,53 @@ C_STATUS Renderer::BeginRender()
 
 C_STATUS Renderer::Render()
 {
-    // #todo_vk test multithreading here and mult-scene support
-    Array<CRenderScene*, 1> Scenes = { m_RenderScene.get() };
-    for (uint32 s = 0; s < Scenes.size(); ++s)
+    if (m_SceneRenderer)
     {
-        auto& Scene = m_RenderScene;
-        for (uint32 i = 0; i < Scene->m_Views.size(); ++i)
-        {
-            auto& SceneView = Scene->m_Views[i];
+        C_STATUS Result = m_SceneRenderer->Render();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
 
-            RenderSceneView(SceneView.get());
+    if (IUISubsystem* UI = m_App->GetUI())
+    {
+        // #todo_ui refactor
+        uint32 WindowsCount = std::min(1u, (uint32)m_WindowContexts.size());
+
+        for (uint32 i = 0; i < WindowsCount; ++i)
+        {
+            CWindowContext* WindowContext = m_WindowContexts[i].get();
+            CASSERT(WindowContext);
+            CCommandQueue* CommandQueue = WindowContext->GetCommandQueue(CommandQueueType::Graphics);
+            CASSERT(CommandQueue);
+            CCommandBuffer* CommandBuffer = CommandQueue->AllocateCommandBuffer();
+            CASSERT(CommandBuffer);
+
+            //PROFILE_GPU_SCOPED_EVENT(CommandBuffer->Get(), "ImGUI Render");
+
+            CommandBuffer->Begin();
+
+            CRenderPass RenderPass{};
+            RenderPass.RenderTargetSet.RenderTargetsCount = 1;
+            RenderPass.RenderTargetSet.RenderTargets[0].RenderTarget = WindowContext->GetCurrentBackBuffer();
+            RenderPass.RenderTargetSet.RenderTargets[0].InitialLayout = EImageLayoutType::ColorAttachment;
+            RenderPass.RenderTargetSet.RenderTargets[0].Layout = EImageLayoutType::ColorAttachment;
+            RenderPass.RenderTargetSet.RenderTargets[0].FinalLayout = EImageLayoutType::Present;
+            RenderPass.RenderTargetSet.RenderTargets[0].LoadOp = ERenderTargetLoadOp::Load;
+            RenderPass.RenderTargetSet.RenderTargets[0].StoreOp = ERenderTargetStoreOp::Store;
+
+            RenderPass.ViewportExtent = { 0, 0, 
+                (float)WindowContext->GetCurrentBackBuffer()->Texture->GetDesc().Width, 
+                (float)WindowContext->GetCurrentBackBuffer()->Texture->GetDesc().Height 
+            };
+
+            CommandBuffer->BeginRenderPass(RenderPass);
+
+            C_STATUS Result = UI->OnRender(CommandBuffer);
+            C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+
+            CommandBuffer->EndRenderPass();
+            CommandBuffer->End();
+
+            CommandQueue->Submit(&CommandBuffer, 1, true);
         }
     }
 
@@ -115,15 +166,13 @@ C_STATUS Renderer::Render()
 
 C_STATUS Renderer::EndRender()
 {
-    auto& Scene = m_RenderScene;
-    for (uint32 SV = 0; SV < Scene->m_Views.size(); ++SV)
+    if (m_SceneRenderer)
     {
-        auto& SceneView = Scene->m_Views[SV];
-
-        //SceneView->EndRender();
+        C_STATUS Result = m_SceneRenderer->EndRender();
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
     }
 
-    // present
+    // Present
     for (uint32 i = 0; i < m_WindowContexts.size(); ++i)
     {
         C_STATUS Result = m_WindowContexts[i]->Present();
@@ -212,48 +261,28 @@ void Renderer::OnRemoveWindow(IWindow* Window)
     }
 }
 
-CRenderScene* Renderer::AddScene(CScene* Scene)
+CSceneRenderer* Renderer::GetSceneRenderer()
 {
-    CASSERT(m_RenderScene);
-    m_RenderScene->m_Scene = Scene;
-
-    return m_RenderScene.get();
+    return m_SceneRenderer.get();
 }
 
-void Renderer::RemoveScene(CScene* Scene)
+CRasterizerState* Renderer::GetRasterizerState(RasterizerState State)
 {
-    CASSERT(false);
+    // #todo_vk
+    static CRasterizerState RState{};
+    return &RState;
 }
 
-CRenderSceneView* Renderer::AddViewport(CSceneViewport* Viewport)
+CBlendState* Renderer::GetBlendState(BlendState State)
 {
-    // #todo_vk check for duplicates
-    
-    auto& RenderSceneView = std::make_shared<CRenderSceneView>();
-
-    const auto& RenderScene = GetRenderScene(Viewport->Scene.get());
-
-    RenderSceneView->Viewport = Viewport;
-    RenderSceneView->RenderScene = RenderScene;
-    RenderSceneView->RenderWindowContext = GetWindowContext(Viewport->Window.get());
-
-    C_STATUS Result = RenderScene->AddSceneView(std::move(RenderSceneView));
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), nullptr);
-
-    return nullptr;
+    static CBlendState BState{};
+    return &BState;
 }
 
-void Renderer::RemoveViewport(CSceneViewport* Viewport)
+CDepthStencilState* Renderer::GetDepthStencilState(DepthStencilState State)
 {
-    CASSERT(false);
-}
-
-CRenderScene* Renderer::GetRenderScene(CScene* Scene)
-{
-    if (m_RenderScene && m_RenderScene->m_Scene == Scene)
-        return m_RenderScene.get();
-
-    return nullptr;
+    static CDepthStencilState DState{};
+    return &DState;
 }
 
 } // namespace Cyclone::Render

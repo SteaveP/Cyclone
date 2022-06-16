@@ -5,19 +5,71 @@
 namespace Cyclone::Render
 {
 
+enum class PipelineType
+{
+    Graphics,
+    Compute,
+    Raytracing,
+    Count
+};
+enum class PrimitiveTopologyType
+{
+    TriangleList,
+    Count
+};
+
 enum class DepthStencilState
 {
-
+    Disabled,
+    Count
 };
 
 enum class RasterizerState
 {
-
+    Default,
+    Count
 };
 
 enum class BlendState
 {
+    Disabled,
+    Count
+};
 
+enum class EVertexBindingRate
+{
+    Vertex,
+    Instance,
+    Count
+};
+
+enum class EPolygonFillMode
+{
+    Fill,
+    Line,
+    Point,
+    Count
+};
+
+enum class ECullMode
+{
+    Disable,
+    Back,
+    Front,
+    Count
+};
+
+enum class ECompareOp
+{
+    Never,
+    Less,
+    Greater,
+    Equal,
+    NotEqual,
+    LessOrEqual,
+    GreaterOrEqual,
+    Always,
+    Count
 };
 
 enum class EFormatType
@@ -32,10 +84,12 @@ enum class EFormatType
     RGBA16_Float,
     RG16_Float,
     R16_Float,
+    R16_UINT,
     RGBA32_Float,
     RGB32_Float,
     RG32_Float,
     R32_Float,
+    R32_UINT,
     BC1_SRGB,
     BC2_SRGB,
     BC3,

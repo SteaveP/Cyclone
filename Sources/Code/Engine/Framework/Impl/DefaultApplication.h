@@ -19,7 +19,7 @@ struct ENGINE_API DefaultApplicationParams
     Ptr<DefaultInputManager> InputManager;
 
     void* PlatformStartupDataPtr = nullptr; // #todo_fixme
-    std::string WindowCaption;
+    String WindowCaption;
 };
 
 class ENGINE_API DefaultApplication : public IApplication

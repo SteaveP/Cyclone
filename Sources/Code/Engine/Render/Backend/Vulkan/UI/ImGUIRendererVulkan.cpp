@@ -9,8 +9,6 @@
 #include "RenderBackendVulkan.h"
 #include "CommandQueueVulkan.h"
 #include "CommandBufferVulkan.h"
-#include "Internal/RenderPassVk.h"
-#include "Internal/FrameBufferVk.h"
 
 #include <backends/imgui_impl_vulkan.h>
 
@@ -23,8 +21,7 @@ class ImGUIRendererVulkan::Pimpl
 {
 public:
     RenderBackendVulkan* Backend;
-    RenderPassVk RenderPassUI;
-    Vector<FrameBufferVk> FrameBufferUI;
+    Vector<CRenderTargetSet> RenderTargetSets;
 };
 
 ImGUIRendererVulkan::ImGUIRendererVulkan() = default;
@@ -32,7 +29,7 @@ ImGUIRendererVulkan::~ImGUIRendererVulkan() = default;
 
 C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, Render::IRendererBackend* IBackend, IWindow* Window)
 {
-    m_pimpl = std::make_unique<Pimpl>();
+    m_pimpl = MakeUnique<Pimpl>();
 
     m_UISubsystem = UISubsystem;
     m_Window = Window;
@@ -40,69 +37,23 @@ C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, 
     m_pimpl->Backend = dynamic_cast<RenderBackendVulkan*>(IBackend);
     C_ASSERT_RETURN_VAL(m_pimpl->Backend, C_STATUS::C_STATUS_INVALID_ARG);
 
+    // #todo_vk we should be able to render ImGUI with any render pass
+
     RenderBackendVulkan* Backend = m_pimpl->Backend;
-    WindowContextVulkan* WindowContext = static_cast<WindowContextVulkan*>(Backend->GetRenderer()->GetWindowContext(m_Window));
+    WindowContextVulkan* WindowContextVk = BACKEND_DOWNCAST(Backend->GetRenderer()->GetWindowContext(m_Window), WindowContextVulkan);
+
+    m_pimpl->RenderTargetSets.resize(WindowContextVk->GetSwapchainImageViewCount());
+
+    for (uint32_t i = 0; i < m_pimpl->RenderTargetSets.size(); ++i)
     {
-        RenderPassVkInitInfo RPDesc{};
-
-        VkFormat ColorFormat = WindowContext->GetSwapchainImageFormat();
-
-        RPDesc.ColorAttachmentCount = 1;
-        VkAttachmentDescription& ColorAttachment = RPDesc.ColorAttachment[0];
-        ColorAttachment.format = ColorFormat;
-        ColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        ColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        ColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        ColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        ColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        ColorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        ColorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        RPDesc.ColorAttachmentRefCount = 1;
-        VkAttachmentReference& ColorAttachmentRef = RPDesc.ColorAttachmentRef[0];
-        ColorAttachmentRef.attachment = 0;
-        ColorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        RPDesc.SubpassCount = 1;
-        VkSubpassDescription& Subpass = RPDesc.Subpass[0];
-        Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        Subpass.colorAttachmentCount = 1;
-        Subpass.pColorAttachments = &ColorAttachmentRef;
-
-        RPDesc.SubpassDependencyCount = 1;
-        VkSubpassDependency& SubpassDependency = RPDesc.SubpassDependency[0];
-        SubpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        SubpassDependency.dstSubpass = 0;
-        SubpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        SubpassDependency.srcAccessMask = 0;
-        SubpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        SubpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        RPDesc.Backend = Backend;
-        RPDesc.Device = WindowContext->GetDevice();
-
-        C_STATUS Result = m_pimpl->RenderPassUI.Init(RPDesc);
-        CASSERT(C_SUCCEEDED(Result));
-    }
-
-    {
-        FrameBufferVkInitInfo FBDesc{};
-        FBDesc.Backend = Backend;
-        FBDesc.Device = WindowContext->GetDevice();
-        FBDesc.RenderPass = &m_pimpl->RenderPassUI;
-        FBDesc.Width = WindowContext->GetSwapchainExtent().width;
-        FBDesc.Height = WindowContext->GetSwapchainExtent().height;
-        FBDesc.Layers = 1;
-
-        m_pimpl->FrameBufferUI.resize(WindowContext->GetSwapchainImageViewCount());
-        for (uint32_t i = 0; i < m_pimpl->FrameBufferUI.size(); ++i)
-        {
-            FBDesc.Attachments[0] = WindowContext->GetSwapchainImageView(i);
-            FBDesc.AttachmentsCount = 1;
-
-            C_STATUS Result = m_pimpl->FrameBufferUI[i].Init(FBDesc);
-            CASSERT(C_SUCCEEDED(Result));
-        }
+        auto& RenderTargetSet = m_pimpl->RenderTargetSets[i];
+        RenderTargetSet.RenderTargetsCount = 1;
+        RenderTargetSet.RenderTargets[0].RenderTarget = WindowContextVk->GetBackBuffer(i);
+        RenderTargetSet.RenderTargets[0].InitialLayout = EImageLayoutType::ColorAttachment;
+        RenderTargetSet.RenderTargets[0].Layout = EImageLayoutType::ColorAttachment;
+        RenderTargetSet.RenderTargets[0].FinalLayout = EImageLayoutType::Present;
+        RenderTargetSet.RenderTargets[0].LoadOp = ERenderTargetLoadOp::Load;
+        RenderTargetSet.RenderTargets[0].StoreOp = ERenderTargetStoreOp::Store;
     }
 
 #if ENABLE_IMGUI_IMPL_VULKAN
@@ -111,22 +62,29 @@ C_STATUS ImGUIRendererVulkan::OnInit(void* Instance, IUISubsystem* UISubsystem, 
 
     ImGui_ImplVulkan_InitInfo InitInfo{};
     InitInfo.Instance = Backend->GetGlobalContext().GetInstance();
-    InitInfo.PhysicalDevice = WindowContext->GetPhysDevice();
-    InitInfo.Device = WindowContext->GetLogicDevice();
-    InitInfo.Queue = WindowContext->GetCommandQueueVk(CommandQueueType::Graphics)->Get();
-    InitInfo.QueueFamily = WindowContext->GetCommandQueueVk(CommandQueueType::Graphics)->GetQueueFamilyIndex();
+    InitInfo.PhysicalDevice = WindowContextVk->GetPhysDevice();
+    InitInfo.Device = WindowContextVk->GetLogicDevice();
+    InitInfo.Queue = WindowContextVk->GetCommandQueueVk(CommandQueueType::Graphics)->Get();
+    InitInfo.QueueFamily = WindowContextVk->GetCommandQueueVk(CommandQueueType::Graphics)->GetQueueFamilyIndex();
     InitInfo.PipelineCache = VK_NULL_HANDLE;
-    InitInfo.DescriptorPool = Backend->GetDescriptorPool();
+    InitInfo.DescriptorPool = Backend->GetResourceManager(WindowContextVk->GetDeviceHandle())->GetDescriptorPool();
     InitInfo.Subpass = 0;
-    InitInfo.MinImageCount = WindowContext->GetMinSwapchainImageCount();
-    InitInfo.ImageCount = (uint32_t)WindowContext->GetSwapchainImageViewCount();
-    InitInfo.MSAASamples = WindowContext->GetCurrentMsaaSamples();
+    InitInfo.MinImageCount = WindowContextVk->GetMinSwapchainImageCount();
+    InitInfo.ImageCount = (uint32_t)WindowContextVk->GetSwapchainImageViewCount();
+    InitInfo.MSAASamples = WindowContextVk->GetCurrentMsaaSamples();
 
-    bool Result = ImGui_ImplVulkan_Init(&InitInfo, m_pimpl->RenderPassUI.Get());
+    CRenderPass RenderPass{};
+    RenderPass.RenderTargetSet = m_pimpl->RenderTargetSets[0];
+    RenderPass.ViewportExtent = { 0, 0, (float)WindowContextVk->GetSwapchainExtent().width, (float)WindowContextVk->GetSwapchainExtent().height };
+
+    RenderPassVk* RenderPassVkPtr = Backend->GetGlobalContext().GetLogicalDevice(WindowContextVk->GetDeviceHandle()).
+        ResourceManager->GetRenderPassVk(RenderPass);
+
+    bool Result = ImGui_ImplVulkan_Init(&InitInfo, RenderPassVkPtr->Get());
     C_ASSERT_RETURN_VAL(Result, C_STATUS::C_STATUS_ERROR);
 
     {
-        CommandQueueVulkan* CommandQueue = WindowContext->GetCommandQueueVk(CommandQueueType::Graphics);
+        CommandQueueVulkan* CommandQueue = WindowContextVk->GetCommandQueueVk(CommandQueueType::Graphics);
         CASSERT(CommandQueue);
 
         CommandBufferVulkan* CommandBuffer = CommandQueue->AllocateCommandBuffer();
@@ -159,38 +117,12 @@ C_STATUS ImGUIRendererVulkan::OnFrame(void* Instance)
     return C_STATUS::C_STATUS_OK;
 }
 
-C_STATUS ImGUIRendererVulkan::OnRender(void* Instance)
+C_STATUS ImGUIRendererVulkan::OnRender(void* Instance, CCommandBuffer* CommandBuffer)
 {
 #if ENABLE_IMGUI_IMPL_VULKAN
-    WindowContextVulkan* WindowContext = static_cast<WindowContextVulkan*>(m_pimpl->Backend->GetRenderer()->GetWindowContext(m_Window));
-
-    CommandQueueVulkan* CommandQueue = WindowContext->GetCommandQueueVk(CommandQueueType::Graphics);
-    CASSERT(CommandQueue);
-
-    CommandBufferVulkan* CommandBuffer = CommandQueue->AllocateCommandBuffer();
-    CASSERT(CommandBuffer);
-
-    PROFILE_GPU_SCOPED_EVENT(CommandBuffer->Get(), "ImGUI Render");
-
-    CommandBuffer->Begin();
-
-    // #todo_vk render pass must be setted up from external env as well as command list already should be prepared with correct state
-    {
-        RenderPassVkBeginInfo RPBeginInfo{};
-        RPBeginInfo.FrameBuffer = &m_pimpl->FrameBufferUI[WindowContext->GetCurrentImageIndex()];
-        RPBeginInfo.RenderArea.offset = { 0, 0 };
-        RPBeginInfo.RenderArea.extent = WindowContext->GetSwapchainExtent();
-
-        m_pimpl->RenderPassUI.Begin(CommandBuffer, RPBeginInfo);
-    }
-
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffer->Get());
-
-    m_pimpl->RenderPassUI.End(CommandBuffer);
-
-    CommandBuffer->End();
-
-    CommandQueue->SubmitVk(&CommandBuffer, 1, VK_NULL_HANDLE, VK_NULL_HANDLE, true);
+    // #todo_vk check that current render pass is compatible with those we used in Init method
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBufferVk->Get());
 #endif
 
     return C_STATUS::C_STATUS_OK;

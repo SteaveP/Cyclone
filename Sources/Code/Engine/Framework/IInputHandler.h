@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/EngineModule.h"
+
 namespace Cyclone
 {
 

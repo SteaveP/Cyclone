@@ -76,16 +76,18 @@ C_STATUS ImGUISubsystem::OnFrame()
     return C_STATUS::C_STATUS_OK;
 }
 
-C_STATUS ImGUISubsystem::OnRender()
+C_STATUS ImGUISubsystem::OnRender(Render::CCommandBuffer* CommandBuffer)
 {
     PROFILE_CPU_SCOPED_EVENT("ImGUI OnRender");
     ImGui::Render();
 
-    C_STATUS Result = m_Platform->OnRender(m_Context);
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    {
+        C_STATUS Result = m_Platform->OnRender(m_Context);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
 
-    Result = m_Renderer->OnRender(m_Context);
-    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+        Result = m_Renderer->OnRender(m_Context, CommandBuffer);
+        C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), Result);
+    }
 
     return C_STATUS::C_STATUS_OK;
 }

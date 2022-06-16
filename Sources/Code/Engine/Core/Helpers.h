@@ -56,4 +56,6 @@ namespace Cyclone
     DISABLE_COPY(ClassName); \
     DISABLE_MOVE(ClassName);
 
+#define ENABLE_DEBUG_RENDER_BACKEND 1
+
 } // namespace Cyclone

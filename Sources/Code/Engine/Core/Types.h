@@ -7,6 +7,7 @@
 #include <array>
 #include <optional>
 #include <unordered_map>
+#include <set>
 
 namespace Cyclone
 {
@@ -41,6 +42,35 @@ template<typename T, uint32 COUNT>
 using Array = std::array<T, COUNT>;
 
 template<typename T>
+using Set = std::set<T>;
+
+template<typename T>
 using Optional = std::optional<T>;
+
+using RawPtr = void*;
+
+
+template<typename T>
+constexpr inline std::remove_reference_t<T>&& MoveTemp(T&& Arg) noexcept
+{
+    return std::move<T>(std::forward<T>(Arg));
+}
+
+template<typename T, typename... Args>
+inline Ptr<T> MakeShared(Args&&... args)
+{
+    return std::make_shared<T>(std::forward<Args>(args)...);
+}
+template<typename T, typename... Args>
+inline UniquePtr<T> MakeUnique(Args&&... args)
+{
+    return std::make_unique<T>(std::forward<Args>(args)...);
+}
+
+template<typename T>
+inline String ToString(T&& Data)
+{
+    return std::to_string(std::forward<T>(Data));
+}
 
 } // namespace Cyclone

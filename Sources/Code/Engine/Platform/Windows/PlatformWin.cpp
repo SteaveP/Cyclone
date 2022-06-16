@@ -10,7 +10,7 @@ namespace Cyclone
 
 UniquePtr<IWindow> PlatformWin::CreateWindowPtr()
 {
-    return std::make_unique<WindowWinApi>();
+    return MakeUnique<WindowWinApi>();
 }
 
 void PlatformWin::ChangeWorkingDirectory(std::string_view Path)

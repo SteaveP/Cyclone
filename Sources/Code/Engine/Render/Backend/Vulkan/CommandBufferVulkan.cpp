@@ -2,9 +2,15 @@
 
 #include "CommandQueueVulkan.h"
 #include "RenderBackendVulkan.h"
+#include "BufferVulkan.h"
 
 #include "Internal/RenderPassVk.h"
 #include "Internal/FrameBufferVk.h"
+#include "Internal/PipelineStateVk.h"
+
+#include "Engine/Render/Types/Texture.h"
+
+#include <type_traits>
 
 namespace Cyclone::Render
 {
@@ -52,7 +58,7 @@ C_STATUS CommandBufferVulkan::Init(CommandQueueVulkan* CommandQueue)
     C_ASSERT_VK_SUCCEEDED_RET(Result, C_STATUS::C_STATUS_ERROR);
 
     // Command Context
-    m_Context = std::make_unique<CCommandContextVulkan>();
+    m_Context = MakeUnique<CCommandContextVulkan>();
     m_Context->Init(m_CommandQueue->GetBackendVk()->GetRenderer(), this);
 
     return C_STATUS::C_STATUS_OK;
@@ -107,60 +113,77 @@ void CommandBufferVulkan::Reset()
     C_ASSERT_VK_SUCCEEDED(Result);
 }
 
+void CommandBufferVulkan::Draw(uint32 IndexCount, uint32 InstanceCount, uint32 FirstIndex, int32 VertexOffset, uint32 FirstInstance)
+{
+    CCommandBuffer::Draw(IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
+    vkCmdDrawIndexed(m_CommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
+}
+
 void CCommandContextVulkan::BeginRenderPass(CCommandBuffer* CommandBuffer, const CRenderPass& RenderPass)
 {
     CASSERT(m_ActiveRenderPassVk == nullptr);
+    m_ActivePipelineState = nullptr;
 
     CCommandContext::BeginRenderPass(CommandBuffer, RenderPass);
 
-    CommandBufferVulkan* CommandBufferVk = reinterpret_cast<CommandBufferVulkan*>(CommandBuffer);
-    WindowContextVulkan* WindowContextVk = reinterpret_cast<WindowContextVulkan*>(m_Renderer->GetDefaultWindowContext());
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
 
-    m_ActiveRenderPassVk = GetOrCreateRenderPass(CommandBufferVk, RenderPass);
-    m_ActiveFrameBufferVk = GetOrCreateFrameBuffer(CommandBufferVk, WindowContextVk, RenderPass);
+    auto& Device = m_BackendVk->GetGlobalContext().GetLogicalDevice(CommandBufferVk->GetCommandQueue()->GetDevice());
+    m_ActiveRenderPassVk = Device.ResourceManager->GetRenderPassVk(RenderPass);
+    m_ActiveFrameBufferVk = Device.ResourceManager->GetFrameBufferVk(RenderPass);
 
-    RenderPassVkBeginInfo BeginInfo{};
-    BeginInfo.FrameBuffer = m_ActiveFrameBufferVk;
-    BeginInfo.RenderArea.offset = { (int32)RenderPass.ViewportExtent.X,  (int32)RenderPass.ViewportExtent.Y };
-    BeginInfo.RenderArea.extent = { (uint32)(RenderPass.ViewportExtent.Z - RenderPass.ViewportExtent.X), (uint32)(RenderPass.ViewportExtent.W - RenderPass.ViewportExtent.Y) };
-
-    BeginInfo.ClearColorsCount = 0;
-    for (uint32 i = 0; i < RenderPass.RenderTargetSet.RenderTargetsCount; ++i)
-    {
-        const auto& ClearValue = RenderPass.RenderTargetSet.RenderTargets[i].ClearValue;
-        if (!ClearValue.has_value())
-            break;
-
-        BeginInfo.ClearColors[BeginInfo.ClearColorsCount].color = VkClearColorValue{ 
-            ClearValue->Color.X, ClearValue->Color.Y, ClearValue->Color.Z, ClearValue->Color.W };
-
-        ++BeginInfo.ClearColorsCount;
-    }
-
-    if (RenderPass.RenderTargetSet.DepthScentil.ClearValue.has_value())
-    {
-        const auto& ClearValue = RenderPass.RenderTargetSet.DepthScentil.ClearValue;
-
-        BeginInfo.ClearColors[BeginInfo.ClearColorsCount].color = VkClearColorValue{
-            ClearValue->Color.X, ClearValue->Color.Y, ClearValue->Color.Z, ClearValue->Color.W };
-
-        ++BeginInfo.ClearColorsCount;
-    }
-
-    m_ActiveRenderPassVk->Begin(CommandBufferVk, BeginInfo);
+    m_ActiveRenderPassVk->Begin(CommandBufferVk, m_ActiveFrameBufferVk, RenderPass);
 }
 
 void CCommandContextVulkan::EndRenderPass(CCommandBuffer* CommandBuffer)
 {
     CASSERT(m_ActiveRenderPassVk);
 
-    CommandBufferVulkan* CommandBufferVk = reinterpret_cast<CommandBufferVulkan*>(CommandBuffer);
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
     m_ActiveRenderPassVk->End(CommandBufferVk);
 
     m_ActiveRenderPassVk = nullptr;
     m_ActiveFrameBufferVk = nullptr;
+    m_ActivePipelineState = nullptr;
 
     CCommandContext::EndRenderPass(CommandBuffer);
+}
+
+void CCommandContextVulkan::SetIndexBuffer(CCommandBuffer* CommandBuffer, CBuffer* IndexBuffer, uint32 Offset)
+{
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
+    CBufferVulkan* IndexBufferVk = BACKEND_DOWNCAST(IndexBuffer, CBufferVulkan);
+
+    CASSERT(IndexBufferVk->GetDesc().Format == EFormatType::R16_UINT || IndexBufferVk->GetDesc().Format == EFormatType::R32_UINT);
+    VkIndexType IndexType = IndexBufferVk->GetDesc().Format == EFormatType::R16_UINT ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
+    vkCmdBindIndexBuffer(CommandBufferVk->Get(), IndexBufferVk->GetBuffer(), Offset, IndexType);
+}
+
+void CCommandContextVulkan::SetVertexBuffer(CCommandBuffer* CommandBuffer, CBuffer* VertexBuffer, uint32 Slot, uint64 Offset)
+{
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
+    CBufferVulkan* VertexBufferVk = BACKEND_DOWNCAST(VertexBuffer, CBufferVulkan);
+
+    VkBuffer vertexBuffers[] = { VertexBufferVk->GetBuffer() };
+    VkDeviceSize offests[] = { Offset };
+    vkCmdBindVertexBuffers(CommandBufferVk->Get(), Slot, 1, vertexBuffers, offests);
+}
+
+Ptr<CPipeline> CCommandContextVulkan::SetPipeline(CCommandBuffer* CommandBuffer, const CPipelineDesc& Desc)
+{
+    CASSERT(Desc.Type != PipelineType::Graphics || m_ActiveRenderPassVk);
+    CommandBufferVulkan* CommandBufferVk = BACKEND_DOWNCAST(CommandBuffer, CommandBufferVulkan);
+
+    Ptr<CPipeline> Pipepline;
+
+    // find in cache or create
+    auto& Device = m_BackendVk->GetGlobalContext().GetLogicalDevice(CommandBufferVk->GetCommandQueue()->GetDevice());
+    m_ActivePipelineState = Device.ResourceManager->GetPipelineStateVk(m_ActiveRenderPassVk, Desc);
+
+    C_STATUS Result = m_ActivePipelineState->Bind(CommandBufferVk);
+    C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), nullptr);
+
+    return Pipepline;
 }
 
 C_STATUS CCommandContextVulkan::Init(IRenderer* Renderer, CCommandBuffer* CommandBuffer)
@@ -178,67 +201,9 @@ void CCommandContextVulkan::DeInit()
 {
     CASSERT(m_ActiveRenderPassVk == nullptr && m_ActiveFrameBufferVk == nullptr);
 
-    m_FrameBufferCache.clear();
-    m_RenderPassCache.clear();
+    m_ActiveRenderPassVk = nullptr;
 
     CCommandContext::DeInit();
-}
-
-RenderPassVk* CCommandContextVulkan::GetOrCreateRenderPass(CommandBufferVulkan* CommandBufferVk, const CRenderPass& RenderPass)
-{
-    // #todo_vk refactor
-    uint64 HashRP = 0;
-
-    if (m_RenderPassCache.find(HashRP) == m_RenderPassCache.end())
-    {
-        RenderPassVkInitInfo Desc{};
-        RenderPassVkInitInfo::CreateFromRenderPass(Desc, m_BackendVk, CommandBufferVk->GetCommandQueue()->GetDevice(), RenderPass);
-
-        auto& RenderPass = m_RenderPassCache[HashRP];
-        RenderPass = std::make_unique<RenderPassVk>();
-
-        C_STATUS Result = RenderPass->Init(Desc);
-        CASSERT(C_SUCCEEDED(Result));
-    }
-    return m_RenderPassCache[HashRP].get();
-}
-
-FrameBufferVk* CCommandContextVulkan::GetOrCreateFrameBuffer(CommandBufferVulkan* CommandBufferVk, const WindowContextVulkan* WindowContextVk, const CRenderPass& RenderPass)
-{
-    // #todo_vk refactor
-    uint64 HashFB = WindowContextVk->GetCurrentImageIndex();
-    if (m_FrameBufferCache.find(HashFB) == m_FrameBufferCache.end())
-    {
-        FrameBufferVkInitInfo FBDesc{};
-        FBDesc.Backend = m_BackendVk;
-        FBDesc.Device = CommandBufferVk->GetCommandQueue()->GetDevice();
-        FBDesc.RenderPass = m_ActiveRenderPassVk;
-        FBDesc.Width = WindowContextVk->GetSwapchainExtent().width;
-        FBDesc.Height = WindowContextVk->GetSwapchainExtent().height;
-        FBDesc.Layers = 1;
-
-        FBDesc.AttachmentsCount = RenderPass.RenderTargetSet.RenderTargetsCount
-            + (RenderPass.RenderTargetSet.DepthScentil.RenderTarget ? 1 : 0);
-
-        for (uint32 i = 0; i < RenderPass.RenderTargetSet.RenderTargetsCount; ++i)
-        {
-            // #todo_vk refactor
-            FBDesc.Attachments[i] = WindowContextVk->GetSwapchainImageView(WindowContextVk->GetCurrentImageIndex());
-        }
-
-        if (RenderPass.RenderTargetSet.DepthScentil.RenderTarget)
-        {
-            CASSERT(false);
-        }
-
-        auto& FrameBuffer = m_FrameBufferCache[HashFB];
-        FrameBuffer = std::make_unique<FrameBufferVk>();
-
-        C_STATUS Result = FrameBuffer->Init(FBDesc);
-        CASSERT(C_SUCCEEDED(Result));
-    }
-
-    return m_FrameBufferCache[HashFB].get();
 }
 
 } //namespace Cyclone::Render

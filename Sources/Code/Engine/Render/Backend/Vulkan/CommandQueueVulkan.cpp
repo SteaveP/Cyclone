@@ -17,8 +17,8 @@ CommandQueueVulkan::~CommandQueueVulkan()
 C_STATUS CommandQueueVulkan::SubmitVk(CommandBufferVulkan** CommandBuffers, uint32_t CommandBuffersCount, VkSemaphore WaitSemaphore, VkFence SubmitCompletedFence, bool AutoReturnToPool)
 {
     CASSERT(CommandBuffersCount <= 10);
-    std::array<VkCommandBuffer, 10> RawCommandBuffers;
-    std::array<VkSemaphore, 10> RawSignalSemaphores;
+    Array<VkCommandBuffer, 10> RawCommandBuffers;
+    Array<VkSemaphore, 10> RawSignalSemaphores;
     for (uint32_t i = 0; i < CommandBuffersCount; ++i)
     {
         RawCommandBuffers[i] = CommandBuffers[i]->Get();
@@ -68,17 +68,17 @@ Cyclone::Render::CommandBufferVulkan* CommandQueueVulkan::AllocateCommandBuffer(
 
     if (m_freeCommandBuffers.size() != 0)
     {
-        CommandBuffer = std::move(m_freeCommandBuffers.back());
+        CommandBuffer = MoveTemp(m_freeCommandBuffers.back());
         m_freeCommandBuffers.pop_back();
     }
     else
     {
-        CommandBuffer = std::make_unique<CommandBufferVulkan>();
+        CommandBuffer = MakeUnique<CommandBufferVulkan>();
         C_STATUS Result = CommandBuffer->Init(this);
         C_ASSERT_RETURN_VAL(C_SUCCEEDED(Result), nullptr);
     }
 
-    m_allocatedCommandBuffers.emplace_back(AllocatedCommandBuffer{ std::move(CommandBuffer), m_BackendVk->GetRenderer()->GetCurrentFrame() });
+    m_allocatedCommandBuffers.emplace_back(AllocatedCommandBuffer{ MoveTemp(CommandBuffer), m_BackendVk->GetRenderer()->GetCurrentFrame() });
 
     return m_allocatedCommandBuffers.back().CommandBuffer.get();;
 }
@@ -89,7 +89,7 @@ void CommandQueueVulkan::ReturnCommandBuffer(CommandBufferVulkan* commandBuffer)
     //CASSERT(false);
 }
 
-C_STATUS CommandQueueVulkan::Init(RenderBackendVulkan* Backend, DeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
+C_STATUS CommandQueueVulkan::Init(RenderBackendVulkan* Backend, CDeviceHandle Device, CommandQueueType QueueType, uint32_t QueueFamilyIndex, uint32_t QueueIndex)
 {
     // #todo_vk call base method
     m_Backend = Backend;
@@ -113,6 +113,8 @@ void CommandQueueVulkan::DeInit()
     m_freeCommandBuffers.clear();
     m_submittedCommandBuffers.clear();
 
+    m_Queue = nullptr;
+
     CCommandQueue::DeInit();
 }
 
@@ -128,7 +130,7 @@ C_STATUS CommandQueueVulkan::OnBeginRender()
         {
             it->CommandBuffer->Reset();
 
-            m_freeCommandBuffers.push_back(std::move(it->CommandBuffer));
+            m_freeCommandBuffers.push_back(MoveTemp(it->CommandBuffer));
             it = m_allocatedCommandBuffers.erase(it);
         }
         else
