@@ -18,7 +18,7 @@ function EnginePath(dir)
 end
 
 function BuildPath(dir)
-	return AppPath(path.join("Build",dir))
+	return SourcesPath(path.join("Build",dir))
 end
 
 --------------------------------------------------------------------
