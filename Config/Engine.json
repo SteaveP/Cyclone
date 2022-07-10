@@ -1,0 +1,63 @@
+{
+	"Application":
+	{
+
+	},
+
+	"UI":
+	{
+		"EnableDarkTheme": true,
+		// Allow to move UI Widgets to own separate windows
+		"EnableViewports": true
+	},
+
+	"Log":
+	{
+        "EnableLogging": true,
+        //"Level": "Trace", // Trace, Debug, Info, Warn, Err, Critical, Off
+        "Filename": "Intermediate/Logs/EngineFromConfig.log"
+	},
+
+	"Render":
+	{		
+		"PreferredGPU": "Discrete", // Register-sensitive. Can be None, Discrete, Integrated, AMD, INTEL, NVIDIA or GPU%d. Also could be overriden by "-PreferredGPU"
+		"FramesInFlightCount": 2,
+		
+		// Features
+		"VSync": true, 
+    	"EnableMultiThreading": true, // could be overriten by -RenderThreadEnable true/false command line argument
+		"EnableBindless": true,
+		"EnableAsyncCompute": true,
+        "SwapchainType": "Mailbox", // "Mailbox"
+		
+		// Debug/validation
+		"EnableDebug" : true,
+		"EnableValidation": true,
+		"EnableGPUValidation": true,
+		"EnableDebugShaders": true, // #todo_vk
+		"EnableRenderdoc": true,
+
+		"UploadQueueBufferSize": 16000000, // should be ~16 MB
+
+		"Vulkan":
+		{
+			// Instance Layers
+			"InstanceLayers": [],
+			// Instance Extensions
+			"InstanceExtensions": [],
+			
+			"ValidationInstanceLayers": ["VK_LAYER_KHRONOS_validation", "VK_LAYER_KHRONOS_synchronization2"],//, "VK_LAYER_LUNARG_monitor"],
+			"ValidationInstanceExtensions": [],
+
+			// Features
+			
+			// Extension names
+			"DeviceExtensions": [] // "VK_KHR_synchronization2"
+		},
+
+		"DX12":
+		{
+
+		}
+	}
+}

@@ -2,13 +2,13 @@
 #include "EditorApp.h"
 
 static auto AppCreateCallback = [](int Argc, char* Argv[], void* PlatformDataPtr,
-    Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
+    Cyclone::UniquePtr<Cyclone::CDefaultApplication>& App, Cyclone::CDefaultApplicationParams& AppParams)
 {
-    App = Cyclone::MakeShared<Cyclone::EditorApplication>();
+    App = Cyclone::MakeUnique<Cyclone::CEditorApplication>();
     AppParams.WindowCaption = "Cyclone's Editor";
 };
 
-#define APPLICATION_CRATE_CALLBACK AppCreateCallback
+#define APPLICATION_CREATE_CALLBACK AppCreateCallback
 
 #define GENERATE_MAIN_FUNCTION 1
 #define GENERATE_DEFAULT_MODULE_LOADER 1

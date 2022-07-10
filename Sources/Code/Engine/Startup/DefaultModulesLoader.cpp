@@ -12,25 +12,25 @@
 #endif
 
 #if PLATFORM_WIN64
-#include "Engine/Platform/Windows/PlatformWinModule.h"
+#include "Engine/Platform/Impl/Windows/PlatformWinModule.h"
 #else
 #error Unsupported platform
 #endif
 
 #if RENDER_BACKEND_VULKAN
-#include "Engine/Render/Backend/Vulkan/RenderBackendVulkanModule.h"
+#include "Engine/Render/Backend/Impl/Vulkan/RenderBackendVulkanModule.h"
 #elif RENDER_BACKEND_DX12
-#include "Engine/Render/Backend/DX12/RenderBackendDX12Module.h"
+#include "Engine/Render/Backend/Impl/DX12/RenderBackendDX12Module.h"
 #else
 #error Unsupported render backend
 #endif
 
-Cyclone::MainEntryCallback LoadModuleMainCallback = [](int Argc, char* Argv[], void* PlatformDataPtr,
-    Cyclone::Ptr<Cyclone::DefaultApplication>& App, Cyclone::DefaultApplicationParams& AppParams)
+Cyclone::MainEntryCallback LoadModuleMainCallback = [](int Argc, char* Argv[], void* PlatformDataRawPtr,
+    Cyclone::UniquePtr<Cyclone::CDefaultApplication>& App, Cyclone::CDefaultApplicationParams& AppParams)
 {
     C_UNREFERENCED(Argc);
     C_UNREFERENCED(Argv);
-    C_UNREFERENCED(PlatformDataPtr);
+    C_UNREFERENCED(PlatformDataRawPtr);
 
     Cyclone::GEngineRegisterModule(Cyclone::CreatePlatformModule());
     Cyclone::GEngineRegisterModule(Cyclone::CreateRenderBackendModule());
@@ -43,5 +43,7 @@ Cyclone::MainEntryCallback LoadModuleMainCallback = [](int Argc, char* Argv[], v
 #endif
 
 };
+
+#define MODULE_LOADING_CALLBACK LoadModuleMainCallback
 
 #endif // GENERATE_DEFAULT_MODULE_LOADER

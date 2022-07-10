@@ -2,14 +2,6 @@
 	path = Sources/ThirdParty/ImGuiFileDialog
 	branch = Lib_Only
 	url = https://github.com/aiekick/ImGuiFileDialog.git
-[submodule "Sources/ThirdParty/Lyra"]
-	path = Sources/ThirdParty/Lyra
-	branch = master
-	url = https://github.com/bfgroup/Lyra.git
-[submodule "Sources/ThirdParty/Microprofile"]
-	path = Sources/ThirdParty/Microprofile
-	branch = master
-	url = https://github.com/jonasmr/microprofile
 [submodule "Sources/ThirdParty/EnTT"]
 	path = Sources/ThirdParty/EnTT
 	branch = master
@@ -29,3 +21,15 @@
 [submodule "Sources/ThirdParty/Render/Vulkan/Volk"]
 	path = Sources/ThirdParty/Render/Vulkan/Volk
 	url = https://github.com/zeux/volk.git
+[submodule "Sources\\ThirdParty\\Json"]
+	path = Sources\\ThirdParty\\Json
+	url = https://github.com/nlohmann/json.git
+[submodule "Sources\\ThirdParty\\Spdlog"]
+	path = Sources\\ThirdParty\\Spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "Sources/ThirdParty/Optick"]
+	path = Sources/ThirdParty/Optick
+	url = https://github.com/bombomby/optick.git
+[submodule "Sources/ThirdParty/EnkiTS"]
+	path = Sources/ThirdParty/EnkiTS
+	url = https://github.com/dougbinks/enkiTS.git

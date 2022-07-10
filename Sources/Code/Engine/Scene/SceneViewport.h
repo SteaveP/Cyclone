@@ -15,6 +15,8 @@ public:
     CSceneViewport();
     ~CSceneViewport();
 
+    const String& GetName() const { return m_Name; }
+
 public:
     Ptr<IWindow> Window;
     Ptr<CScene> Scene;
@@ -24,6 +26,11 @@ public:
     Vec2 BottomRightCorner;
 
     Ptr<CCamera> Camera;
+
+protected:
+    String m_Name;
+
+    friend class CSceneSubsystem;
 };
 
 }

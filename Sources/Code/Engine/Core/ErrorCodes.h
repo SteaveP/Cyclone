@@ -5,10 +5,11 @@ namespace Cyclone
 
 enum class C_STATUS
 {
-    C_STATUS_OK = 0,
-    C_STATUS_ERROR = 1,
-    C_STATUS_INVALID_ARG = 2,
-    C_STATUS_SHOULD_EXIT = 3,
+    C_STATUS_OK             = 0,
+    C_STATUS_ERROR          = 1,
+    C_STATUS_INVALID_ARG    = 2,
+    C_STATUS_OUT_OF_MEM     = 3,
+    C_STATUS_SHOULD_EXIT    = 4,
 
     C_STATUS_COUNT
 };

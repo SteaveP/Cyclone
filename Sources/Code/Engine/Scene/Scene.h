@@ -14,6 +14,12 @@ public:
     CScene();
     ~CScene();
 
+    const String& GetName() const { return m_Name; }
+
+protected:
+    String m_Name;
+
+    friend class CSceneSubsystem;
 };
 
 }

@@ -1,3 +1,7 @@
+-- Vulkan Function Pointers loading used instead of static linking
+-- (see Volk lib, https://gpuopen.com/learn/reducing-vulkan-api-call-overhead/)
+bEnableVolk = true
+
 local function GetVulkanSDKPath()
 	-- for example "C:/VulkanSDK/1.2.141.2/"
 	local VulkanSDKPath = os.getenv("VULKAN_SDK")
@@ -23,34 +27,53 @@ function IncludeEngineRenderPlatformVulkan()
 			SetupRenderBackendProject(BackendName)
 			
 			files {
-				EnginePath("Render/Backend/Vulkan/**.h"),
-				EnginePath("Render/Backend/Vulkan/**.cpp"),
+				EnginePath("Render/Backend/Impl/Vulkan/**.h"),
+				EnginePath("Render/Backend/Impl/Vulkan/**.cpp"),
 			}
 			
-			removefiles {EnginePath("Render/Backend/Vulkan/Modules/**")}
+			removefiles {EnginePath("Render/Backend/Impl/Vulkan/Modules/**")}
 			
 			vpaths {
-				["Code/*"] = {EnginePath("Render/Backend/Vulkan/**")},
+				["Code/*"] = {EnginePath("Render/Backend/Impl/Vulkan/**")},
 			}
 
-			includedirs { EnginePath("Render/Backend/Vulkan") }
+			includedirs { EnginePath("Render/Backend/Impl/Vulkan") }
 			includedirs { RelativeVulkanSDKPath("Include") }
 			libdirs { RelativeVulkanSDKPath("Lib") }
-			links { "vulkan-1" } -- #todo make dynamic Vulkan Function Pointers loading (Volk lib, https://gpuopen.com/learn/reducing-vulkan-api-call-overhead/)
+
+			if (bEnableVolk) then
+				defines { 
+					"ENABLE_VOLK_LOADER=1",
+					"IMGUI_IMPL_VULKAN_NO_PROTOTYPES",
+				}
+
+				filter { "platforms:Win64*"}
+					defines { "VK_USE_PLATFORM_WIN32_KHR=1" }
+				filter{}
+			else				
+				links { "vulkan-1" }
+			end
 
 			AddEngineDependencyInternal()
 
 			-- ImGui Renderer
 			AddImGuiDependency()
 			files {
-				SourcesPath("ThirdParty/ImGui/backends/imgui_impl_vulkan.h"),
-				SourcesPath("ThirdParty/ImGui/backends/imgui_impl_vulkan.cpp")
+				-- There are modification for vulkan backend thus use local copy
+				-- patches of changes are stored nearby in the same folder
+				EnginePath("Render/Backend/Impl/Vulkan/UI/**"),
+				EnginePath("Render/Backend/Impl/Vulkan/UI/imgui_impl_vulkan.h"),
+				EnginePath("Render/Backend/Impl/Vulkan/UI/imgui_impl_vulkan.cpp")
 			}
 			vpaths { ["Code/UI/ImGui/*"] = { SourcesPath("ThirdParty/ImGui**") } }
 			
 			
 			filter { "toolset:msc*" }
 				files { SourcesPath("ThirdParty/ImGui/misc/natvis/*.natvis")}
+			filter {}
+
+			filter { "files:**MemoryAllocatorVk.cpp" }
+				IncludeInUnityBuild "Off"
 			filter {}
 
 			-- Vulkan Memory Allocator

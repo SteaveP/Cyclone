@@ -1,0 +1,84 @@
+diff --git a/backends/imgui_impl_vulkan.cpp b/backends/imgui_impl_vulkan.cpp
+index 1fc210e1..8752d7b0 100644
+--- a/backends/imgui_impl_vulkan.cpp
++++ b/backends/imgui_impl_vulkan.cpp
+@@ -108,7 +108,7 @@ struct ImGui_ImplVulkan_ViewportData
+ struct ImGui_ImplVulkan_Data
+ {
+     ImGui_ImplVulkan_InitInfo   VulkanInitInfo;
+-    VkRenderPass                RenderPass;
++    VkFormat                    ColorAttachmentFormat;
+     VkDeviceSize                BufferMemoryAlignment;
+     VkPipelineCreateFlags       PipelineCreateFlags;
+     VkDescriptorSetLayout       DescriptorSetLayout;
+@@ -833,7 +833,7 @@ static void ImGui_ImplVulkan_CreatePipelineLayout(VkDevice device, const VkAlloc
+     check_vk_result(err);
+ }
+ 
+-static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationCallbacks* allocator, VkPipelineCache pipelineCache, VkRenderPass renderPass, VkSampleCountFlagBits MSAASamples, VkPipeline* pipeline, uint32_t subpass)
++static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationCallbacks* allocator, VkPipelineCache pipelineCache, VkFormat colorAttachmentFormat, VkSampleCountFlagBits MSAASamples, VkPipeline* pipeline, uint32_t subpass)
+ {
+     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
+     ImGui_ImplVulkan_CreateShaderModules(device, allocator);
+@@ -933,8 +933,16 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
+     info.pColorBlendState = &blend_info;
+     info.pDynamicState = &dynamic_state;
+     info.layout = bd->PipelineLayout;
+-    info.renderPass = renderPass;
++    info.renderPass = VK_NULL_HANDLE;
+     info.subpass = subpass;
++
++    VkPipelineRenderingCreateInfo DynamicRendInfo{ .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
++    DynamicRendInfo.colorAttachmentCount = 1;
++    DynamicRendInfo.pColorAttachmentFormats = &colorAttachmentFormat;
++    DynamicRendInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
++    DynamicRendInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
++    info.pNext = &DynamicRendInfo;
++
+     VkResult err = vkCreateGraphicsPipelines(device, pipelineCache, 1, &info, allocator, pipeline);
+     check_vk_result(err);
+ }
+@@ -996,7 +1004,7 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
+         check_vk_result(err);
+     }
+ 
+-    ImGui_ImplVulkan_CreatePipeline(v->Device, v->Allocator, v->PipelineCache, bd->RenderPass, v->MSAASamples, &bd->Pipeline, bd->Subpass);
++    ImGui_ImplVulkan_CreatePipeline(v->Device, v->Allocator, v->PipelineCache, bd->ColorAttachmentFormat, v->MSAASamples, &bd->Pipeline, bd->Subpass);
+ 
+     return true;
+ }
+@@ -1056,7 +1064,7 @@ bool    ImGui_ImplVulkan_LoadFunctions(PFN_vkVoidFunction(*loader_func)(const ch
+     return true;
+ }
+ 
+-bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass render_pass)
++bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkFormat color_attachment_format)
+ {
+     IM_ASSERT(g_FunctionsLoaded && "Need to call ImGui_ImplVulkan_LoadFunctions() if IMGUI_IMPL_VULKAN_NO_PROTOTYPES or VK_NO_PROTOTYPES are set!");
+ 
+@@ -1077,10 +1085,10 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
+     IM_ASSERT(info->DescriptorPool != VK_NULL_HANDLE);
+     IM_ASSERT(info->MinImageCount >= 2);
+     IM_ASSERT(info->ImageCount >= info->MinImageCount);
+-    IM_ASSERT(render_pass != VK_NULL_HANDLE);
++    //IM_ASSERT(render_pass != VK_NULL_HANDLE);
+ 
+     bd->VulkanInitInfo = *info;
+-    bd->RenderPass = render_pass;
++    bd->ColorAttachmentFormat = color_attachment_format;
+     bd->Subpass = info->Subpass;
+ 
+     ImGui_ImplVulkan_CreateDeviceObjects();
+diff --git a/backends/imgui_impl_vulkan.h b/backends/imgui_impl_vulkan.h
+index d2cb0ab4..9dc18452 100644
+--- a/backends/imgui_impl_vulkan.h
++++ b/backends/imgui_impl_vulkan.h
+@@ -65,7 +65,7 @@ struct ImGui_ImplVulkan_InitInfo
+ };
+ 
+ // Called by user code
+-IMGUI_IMPL_API bool         ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass render_pass);
++IMGUI_IMPL_API bool         ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkFormat color_attachment_format);
+ IMGUI_IMPL_API void         ImGui_ImplVulkan_Shutdown();
+ IMGUI_IMPL_API void         ImGui_ImplVulkan_NewFrame();
+ IMGUI_IMPL_API void         ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline = VK_NULL_HANDLE);

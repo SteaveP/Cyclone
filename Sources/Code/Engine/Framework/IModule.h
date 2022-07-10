@@ -37,8 +37,7 @@ ENGINE_API void GEngineUnRegisterAllModules();
 // don't use Vectors as export functions
 ENGINE_API void GEngineGetModules(IModule**& Modules, uint32_t& ModulesCount);
 
-template<typename T>
-inline ENGINE_API IModule* GEngineGetModule()
+inline ENGINE_API IModule* GEngineGetModule(std::string_view Name)
 {
     IModule** Modules;
     uint32_t ModulesCount;
@@ -46,7 +45,7 @@ inline ENGINE_API IModule* GEngineGetModule()
 
     for (uint32_t i = 0; i < ModulesCount; ++i)
     {
-        if (dynamic_cast<std::remove_pointer<T>::type*>(Modules[i]))
+        if (Modules[i]->GetName() == Name)
             return Modules[i];
     }
 

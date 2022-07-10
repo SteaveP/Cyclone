@@ -1,0 +1,41 @@
+diff --git a/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.cpp b/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.cpp
+index 8752d7b..ea5d431 100644
+--- a/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.cpp
++++ b/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.cpp
+@@ -215,6 +215,7 @@ static bool g_FunctionsLoaded = true;
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkMapMemory) \
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkUnmapMemory) \
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkUpdateDescriptorSets) \
++    IMGUI_VULKAN_FUNC_MAP_MACRO(vkFreeDescriptorSets) \
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkGetPhysicalDeviceSurfaceSupportKHR) \
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkWaitForFences) \
+     IMGUI_VULKAN_FUNC_MAP_MACRO(vkCmdBeginRenderPass) \
+@@ -1184,6 +1185,16 @@ VkDescriptorSet ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image
+     }
+     return descriptor_set;
+ }
++bool ImGui_ImplVulkan_RemoveTexture(VkDescriptorSet descriptor_set)
++{
++    ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
++    ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
++
++    VkResult err =  vkFreeDescriptorSets(v->Device, v->DescriptorPool, 1, &descriptor_set);
++    check_vk_result(err);
++
++    return true;
++}
+ 
+ //-------------------------------------------------------------------------
+ // Internal / Miscellaneous Vulkan Helpers
+diff --git a/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.h b/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.h
+index 9dc1845..b20ec2e 100644
+--- a/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.h
++++ b/Sources/Code/Engine/Render/Backend/Vulkan/UI/imgui_impl_vulkan.h
+@@ -76,6 +76,7 @@ IMGUI_IMPL_API void         ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image
+ // Register a texture (VkDescriptorSet == ImTextureID)
+ // FIXME: This is experimental in the sense that we are unsure how to best design/tackle this problem, please post to https://github.com/ocornut/imgui/pull/914 if you have suggestions.
+ IMGUI_IMPL_API VkDescriptorSet ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout);
++IMGUI_IMPL_API bool ImGui_ImplVulkan_RemoveTexture(VkDescriptorSet descriptor_set);
+ 
+ // Optional: load Vulkan functions with a custom function loader
+ // This is only useful with IMGUI_IMPL_VULKAN_NO_PROTOTYPES / VK_NO_PROTOTYPES

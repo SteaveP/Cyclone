@@ -2,6 +2,7 @@
 
 #include "Engine/EngineModule.h"
 #include "Engine/Core/Types.h"
+#include "Engine/Core/Math.h"
 
 namespace Cyclone
 {
@@ -10,12 +11,12 @@ class IApplication;
 
 struct WindowDesc
 {
-    IApplication* App;
-    int Width;
-    int Height;
+    IApplication* App = nullptr;
+    Vec2i Size = { -1, -1 };
 
-    void* PlatformDataPtr = nullptr; // #todo_fixme
+    void* PlatformDataPtr = nullptr;
 
+    String Name;
     String Title;
 };
 
@@ -30,7 +31,7 @@ public:
     virtual ~IWindow() = default;
 
     virtual C_STATUS Init(const WindowDesc* Params) = 0;
-    virtual void Deinit() = 0;
+    virtual void DeInit() = 0;
 
     virtual C_STATUS UpdateMessageQueue() = 0;
 
@@ -44,6 +45,8 @@ public:
 
     virtual PlatformWindowHandle GetPlatformWindowHandle() const = 0;
     virtual IApplication* GetApp() const = 0;
+
+    virtual const String& GetName() const = 0;
 
     virtual void SetActive(bool Active) = 0;
     virtual bool IsActive() const = 0;

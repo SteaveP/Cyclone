@@ -1,0 +1,20 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_EXT_nonuniform_qualifier : enable
+
+#include "common.cshaderh"
+
+layout(location = 0) in vec2 texCoord;
+layout(location = 1) in flat uint inInstanceData;
+
+layout(location = 0) out vec4 outColor;
+
+void main()
+{
+    const int skipc = 50;
+    vec3 col = vec3(texCoord.xy, 0);
+    col.x *= int(gl_FragCoord.x) / skipc % 2 == 0 ? 0.f : 1.f;
+    col.y *= int(gl_FragCoord.y) / skipc % 2 == 0 ? 0.f : 1.f;
+    outColor = vec4(pow(col, vec3(2.2)), 1.f);
+    //outColor.y *= ((int)gl_FragCoord.y / skipc) % 2 == 0;
+}

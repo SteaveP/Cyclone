@@ -11,13 +11,13 @@ function IncludeEnginePlatforms()
 		SetupDefaultProjectState("PlatformWin", "Library")
 		language "C++"
 
-		files { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
+		files { EnginePath("Platform/Impl/Windows/**.h"), EnginePath("Platform/Impl/Windows/**.cpp") }
 
 		vpaths {
-			["Windows/*"] = { EnginePath("Platform/Windows/**.h"), EnginePath("Platform/Windows/**.cpp") }
+			["Windows/**"] = { EnginePath("Platform/Impl/Windows/**.h"), EnginePath("Platform/Impl/Windows/**.cpp") }
 		}
 
-		includedirs { EnginePath("Platform/Windows") }
+		includedirs { EnginePath("Platform/Impl/Windows") }
 
 		-- ImGui platform integration
 		AddImGuiDependency()

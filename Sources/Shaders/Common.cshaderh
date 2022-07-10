@@ -1,0 +1,131 @@
+#ifndef COMMON_H
+#define COMMON_H
+
+struct Material
+{
+    vec3 color;
+    uint TextureIndex;
+};
+
+struct InstanceData
+{
+    mat4 WorldMatrix;
+    uint MaterialIndex;
+};
+
+struct InstanceDataBindless
+{
+    // offsets in 4 bytes (uint indexing)
+    uint IndexBufferOffset; 
+    uint VertexBufferOffset;
+    uint InstanceDataOffset;
+    // #todo_vk offsets for each buffers binding?
+};
+
+layout(set = 0, binding = 0) readonly buffer S0B0_I { InstanceData Data; } g_instData[];
+layout(set = 0, binding = 0) readonly buffer S0B0_M { Material Mat; } g_matData[];
+
+layout(set = 1, binding = 0) uniform sampler g_texSampler;
+layout(set = 1, binding = 1) uniform texture2D g_textures[];
+
+#define BINDLESS_BUFFER_INDEX 0
+#define BINDLESS_WHITE_TEX_INDEX 0
+#define BINDLESS_BLACK_TEX_INDEX 1
+
+// #todo
+layout(set = 0, binding = 0) readonly buffer S0B0_RawI { uint Data[]; } g_RawData[];
+layout(set = 0, binding = 0) readonly buffer S0B0_Raw { uint Data[]; } g_RawDataNonIndexed;
+layout(set = 0, binding = 0) readonly buffer S0B0_RawF { float Data[]; } g_RawFloatDataNonIndexed;
+
+
+InstanceDataBindless ReadInstBindlData(uint offset)
+{
+    InstanceDataBindless data;
+    data.IndexBufferOffset  = g_RawDataNonIndexed.Data[offset+0]; 
+    data.VertexBufferOffset = g_RawDataNonIndexed.Data[offset+1];
+    data.InstanceDataOffset = g_RawDataNonIndexed.Data[offset+2]; // instance data should be inlined here for perf reasons?
+    return data;
+}
+
+// Read 16 byte index
+uint ReadVertexIndex16(uint Offset, uint NonIndexedVertexIndex)
+{
+    uint index = 0;
+    uint rawIndex = g_RawDataNonIndexed.Data[Offset + (NonIndexedVertexIndex >> 1)];
+	index = (NonIndexedVertexIndex & 1) != 0 ? (rawIndex >> 16) : (rawIndex & 0xFF);
+    return index;
+}
+
+vec4 ReadDataWithOffset4F(uint RawOffsetInDWORDS, uint StrideInBytes, uint ElementOffsetInBytes, uint Index)
+{
+    uint OffsetInDWORDS = RawOffsetInDWORDS + (((Index * StrideInBytes) + ElementOffsetInBytes) >> 2);
+
+	vec4 element = vec4(
+		g_RawFloatDataNonIndexed.Data[OffsetInDWORDS + 0],
+		g_RawFloatDataNonIndexed.Data[OffsetInDWORDS + 1],
+		g_RawFloatDataNonIndexed.Data[OffsetInDWORDS + 2],
+		g_RawFloatDataNonIndexed.Data[OffsetInDWORDS + 3]
+	);
+
+	return element;
+}
+uvec4 ReadDataWithOffset4(uint RawOffsetInDWORDS, uint StrideInBytes, uint ElementOffsetInBytes, uint Index)
+{
+    uint OffsetInDWORDS = RawOffsetInDWORDS + (((Index * StrideInBytes) + ElementOffsetInBytes) >> 2);
+
+	uvec4 element = uvec4(
+		g_RawDataNonIndexed.Data[OffsetInDWORDS + 0],
+		g_RawDataNonIndexed.Data[OffsetInDWORDS + 1],
+		g_RawDataNonIndexed.Data[OffsetInDWORDS + 2],
+		g_RawDataNonIndexed.Data[OffsetInDWORDS + 3]
+	);
+
+	return element;
+}
+
+vec3 ReadVertexWithOffset3(uint RawOffset, uint ElementOffsetInBytes, uint VertexIndex)
+{
+    uint Stride = 32; // #todo_vk sizeof(Vertex);
+    uint Offset = RawOffset + ((ElementOffsetInBytes + (VertexIndex * Stride)) >> 2);
+	vec3 element = vec3(
+		g_RawFloatDataNonIndexed.Data[Offset + 0],
+		g_RawFloatDataNonIndexed.Data[Offset + 1],
+		g_RawFloatDataNonIndexed.Data[Offset + 2]
+	);
+
+	return element;
+}
+
+vec2 ReadVertexWithOffset2(uint RawOffset, uint ElementOffsetInBytes, uint VertexIndex)
+{
+    uint Stride = 32; // #todo_vk sizeof(Vertex);
+    uint Offset = RawOffset + ((ElementOffsetInBytes + (VertexIndex * Stride)) >> 2);
+	vec2 element = vec2(
+		g_RawFloatDataNonIndexed.Data[Offset + 0],
+		g_RawFloatDataNonIndexed.Data[Offset + 1]
+	);
+
+	return element;
+}
+
+InstanceData ReadInstanceData(uint RawOffset, uint InstanceIndex)
+{
+    const uint Stride = 80; // #todo sizeof(InstanceData)
+    InstanceData data;
+    // #todo reads with vec4 type and use offsetof (and scale offsets accordingly - like RawOffset / 4)
+    data.WorldMatrix[0] = ReadDataWithOffset4F(RawOffset, Stride,     0, InstanceIndex);
+    data.WorldMatrix[1] = ReadDataWithOffset4F(RawOffset, Stride, 1*4*4, InstanceIndex);
+    data.WorldMatrix[2] = ReadDataWithOffset4F(RawOffset, Stride, 2*4*4, InstanceIndex);
+    data.WorldMatrix[3] = ReadDataWithOffset4F(RawOffset, Stride, 3*4*4, InstanceIndex);
+    data.MaterialIndex =  ReadDataWithOffset4 (RawOffset, Stride, 4*4*4, InstanceIndex).x;
+
+    return data;
+}
+
+uvec3 ReadIndices(uint Offset)
+{
+    return uvec3(0);
+}
+
+
+#endif

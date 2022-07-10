@@ -1,21 +1,22 @@
 #pragma once
 
 #include "Engine/EngineModule.h"
-#include "IWindow.h"
+#include "Engine/Core/Types.h"
 
 #include <functional>
 
 namespace Cyclone
 {
 
+class IEvent;
 class IModule;
+class IWindow;
 
 class ENGINE_API IPlatform
 {
 public:
-    // #todo_ui fix warnings
-    using OnWindowMessageCallback = std::function<C_STATUS(IWindow* Window, void* DataPtr)>; //C_STATUS(*)(IWindow*, void*);
-    using OnDPIChangedCallback    = std::function<C_STATUS(float newDPI, float oldDPI)>; //C_STATUS(*)(float, float);
+    using OnWindowMessageCallback = std::function<C_STATUS(IWindow* Window, void* DataPtr)>;
+    using OnDPIChangedCallback    = std::function<C_STATUS(float newDPI, float oldDPI)>;
 
 public:
     DISABLE_COPY_ENABLE_MOVE(IPlatform);
@@ -24,6 +25,7 @@ public:
     virtual ~IPlatform() = default;
 
     virtual UniquePtr<IWindow> CreateWindowPtr() = 0;
+    virtual Ptr<IEvent> CreateEventPtr() = 0;
 
     virtual void ChangeWorkingDirectory(std::string_view path) = 0;
 

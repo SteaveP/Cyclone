@@ -2,22 +2,28 @@
 
 #include "Engine/Framework/Impl/DefaultApplication.h"
 
-#include "Engine/Scene/Camera.h"
-#include "Engine/Core/Math.h"
-
 namespace Cyclone
 {
 
 class CScene;
 class CSceneViewport;
 
-class EditorApplication : public DefaultApplication
+namespace Render { class CRenderSceneSubsystem; class CRenderSceneView; }
+
+class CSceneSubsystem;
+
+class CEditorApplication : public CDefaultApplication
 {
+public:
+	~CEditorApplication();
+
+	virtual void DeInit() override;
+
 protected:
-	C_STATUS OnUpdate() override;
-	C_STATUS OnRender() override;
-	C_STATUS OnUpdateUI() override;
 	C_STATUS OnInit() override;
+	C_STATUS OnBeginFrame() override;
+	C_STATUS OnUpdate() override;
+	C_STATUS OnUpdateUI() override;
 
 protected:
 	void ShowMenu();
@@ -26,9 +32,19 @@ protected:
 	void ShowProperties();
 	void ShowContentBrowser();
 
+private:
+    void DeInitImpl();
+
+	void OnAddRenderSceneView(Ptr<Render::CRenderSceneView> View);
+	void OnRemoveRenderSceneView(Ptr<Render::CRenderSceneView> View);
+
 protected:
-    Vector<Ptr<CScene>> m_Scenes; // #todo_vk move to separate subsystem (!)
-    Vector<Ptr<CSceneViewport>> m_Viewports;
+    CSceneSubsystem* m_SceneSys = nullptr;
+    Render::CRenderSceneSubsystem* m_RenderSceneSys = nullptr;
+
+	// #todo_editor refactor
+    Vector<RawPtr> m_ViewportRenderTargetsDescriptorSet;
+	Vector<bool> m_ViewportOpened;
 };
 
 } // namespace Cyclone

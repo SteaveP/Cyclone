@@ -137,7 +137,7 @@ function SetupDefaultWorkspaceState()
 
     -- copy pdb's and exe to output dir!
 
-    -- exceptionhandling
+    exceptionhandling "Off"
         -- "Default",
         -- "On",
         -- "Off",
@@ -149,13 +149,13 @@ function SetupDefaultWorkspaceState()
         -- "On",
         -- "Off",
 
-    -- dpiawareness
+    dpiawareness "HighPerMonitor"
         -- "Default",
         -- "None",
         -- "High",
         -- "HighPerMonitor",
 
-    -- functionlevellinking 
+    functionlevellinking "On"
         -- kind = "boolean"
 
     -- inlining
@@ -176,12 +176,12 @@ function SetupDefaultWorkspaceState()
 	--	scope = "config",
 	--	kind = "list:string",
 
-   -- "rtti",
+   rtti "Off"
 --			"Default",
 --			"On",
 --			"Off",
 
--- vectorextensions
+vectorextensions "AVX2"
     -- "Default",
     -- "AVX",
     -- "AVX2",
@@ -267,18 +267,30 @@ end
 -----------------------------------------------------------------
 require('vstudio')
 
-local nname = "UseUnityBuild"
-local field = premake.field.get(nname)
+-- Enables Unity build for project's configuration
+local fieldName = "UseUnityBuild"
+local field = premake.field.get(fieldName)
 if field then
-    premake.api.unregister(nname)
+    premake.api.unregister(fieldName)
 end
 premake.api.register {
-    name = nname,
+    name = fieldName,
     scope = "config",
     kind = "boolean"
 }
 
-local t = premake.vstudio.vc2010.elements
+-- Allow to remove specific files from unity builds (they will be compiled separately)
+fieldName = "IncludeInUnityBuild"
+local field2 = premake.field.get(fieldName)
+if field2 then
+    premake.api.unregister(fieldName)
+end
+premake.api.register {
+    name = fieldName,
+    scope = "config",
+    kind = "boolean"
+}
+
 local function FeatureVStudioUnityBuildEnable(cfg)
     if _ACTION >= "vs2017" then
         if cfg.UseUnityBuild then
@@ -288,11 +300,59 @@ local function FeatureVStudioUnityBuildEnable(cfg)
     end
 end
 
+local function FeatureIncludeInUnityBuild(cfg, condition)
+    local prjcfg, filecfg = premake.config.normalize(cfg)
+
+    if filecfg and filecfg.IncludeInUnityBuild ~= nil then
+        local value = iif(filecfg.IncludeInUnityBuild == premake.ON, "true", "false")
+        premake.vstudio.vc2010.element("IncludeInUnityFile", condition, value)
+    end
+end
+
 function EnableUnityBuildFeature()
     premake.override(premake.vstudio.vc2010.elements, "configurationProperties", function(base,cfg)
         local calls = base(cfg)
         table.insert(calls, FeatureVStudioUnityBuildEnable)
         return calls
+    end)
+
+    premake.override(premake.vstudio.vc2010.categories.ClCompile, "emitFiles", function(base, prj, group)
+        local m = premake.vstudio.vc2010        
+        -- #todo this is crude hack because I don't know how to override local function fileCfgFunc
+        -- copied from premake-core/modules/vstudio/vs2010_vcxproj.lua
+        local fileCfgFunc = function(fcfg, condition)
+            if fcfg then
+                return {
+                    FeatureIncludeInUnityBuild,
+                    m.excludedFromBuild,
+                    m.objectFileName,
+                    m.clCompilePreprocessorDefinitions,
+                    m.clCompileUndefinePreprocessorDefinitions,
+                    m.optimization,
+                    m.forceIncludes,
+                    m.precompiledHeader,
+                    m.enableEnhancedInstructionSet,
+                    m.additionalCompileOptions,
+                    m.disableSpecificWarnings,
+                    m.treatSpecificWarningsAsErrors,
+                    m.basicRuntimeChecks,
+                    m.exceptionHandling,
+                    m.compileAsManaged,
+                    m.compileAs,
+                    m.runtimeTypeInfo,
+                    m.warningLevelFile,
+                    m.compileAsWinRT,
+                    m.externalWarningLevelFile,
+                    m.externalAngleBrackets,
+                }
+            else
+                return {
+                    m.excludedFromBuild
+                }
+            end
+        end
+
+        m.emitFiles(prj, group, "ClCompile", {m.generatedFile}, fileCfgFunc)
     end)
 end
 

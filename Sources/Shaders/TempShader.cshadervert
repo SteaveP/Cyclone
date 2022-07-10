@@ -1,0 +1,41 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+//#extension GL_EXT_nonuniform_qualifier : enable
+
+#include "common.cshaderh"
+
+// Vertex data
+//layout(location = 0) in vec3 inPosition;
+//layout(location = 1) in vec3 inColor;
+//layout(location = 2) in vec2 inTexCoord;
+// Instance data
+layout(location = 3) in uint inInstanceData;
+
+// Out
+layout(location = 0) out vec3      outFragColor;
+layout(location = 1) out vec2      outTexCoord;
+layout(location = 2) out flat uint outMaterialIndex;
+
+void main()
+{
+    // #todo where to pu nonuniformEXT(...) ?
+
+    // read indices
+    InstanceDataBindless bindlessData = ReadInstBindlData(inInstanceData);
+
+    // #todo There is no way to get INDEX ID and read index buffer from it in GLSL
+    // But if disable index buffer, it will output vertexID by incrementing value
+    // this would work, but would has huge performance penalty due to unusing HW vertex cache
+    //uint readedVertIndex = ReadVertexIndex16(bindlessData.IndexBufferOffset, gl_VertexIndex);
+    uint readedVertIndex = gl_VertexIndex;
+	vec3 readedVertPosition = ReadVertexWithOffset3(bindlessData.VertexBufferOffset, 0, readedVertIndex);
+    vec3 readedColorPosition = ReadVertexWithOffset3(bindlessData.VertexBufferOffset, 12, readedVertIndex);
+    vec2 readedUvPosition = ReadVertexWithOffset2(bindlessData.VertexBufferOffset, 24, readedVertIndex);
+
+    InstanceData instData = ReadInstanceData(bindlessData.InstanceDataOffset, 0);
+
+	gl_Position = vec4(readedVertPosition + instData.WorldMatrix[0].xyz, 1.f);
+    outMaterialIndex = instData.MaterialIndex;
+    outFragColor = readedColorPosition;
+    outTexCoord = readedUvPosition;
+}

@@ -7,11 +7,11 @@
 namespace Cyclone
 {
 
-class DefaultApplication;
-struct DefaultApplicationParams;
+class CDefaultApplication;
+struct CDefaultApplicationParams;
 
-using MainEntryCallback = std::function<void(int, char*[], void* PlatformDataPtr, Ptr<DefaultApplication>& App, DefaultApplicationParams& AppParams)>;
+using MainEntryCallback = std::function<void(int, char*[], void* PlatformDataRawPtr, UniquePtr<CDefaultApplication>& App, CDefaultApplicationParams& AppParams)>;
 
-ENGINE_API int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataPtr, MainEntryCallback EntryCallback);
+ENGINE_API int PlatformIndependentMain(int argc, char* argv[], void* PlatformDataRawPtr, MainEntryCallback EntryCallback);
 
 } // namespace Cyclone

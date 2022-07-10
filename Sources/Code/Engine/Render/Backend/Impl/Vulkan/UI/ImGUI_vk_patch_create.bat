@@ -1,0 +1,1 @@
+git diff --patch imgui_impl_vulkan.* >> ImGUI_vk_patch_.patch

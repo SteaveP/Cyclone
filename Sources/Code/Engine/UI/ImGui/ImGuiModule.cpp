@@ -1,6 +1,7 @@
 #include "ImGUIModule.h"
 
 #include "Engine/Core/Types.h"
+#include "Engine/Utils/Log.h"
 
 #include "Engine/UI/ImGui/ImGuiRenderer.h"
 #include "Engine/UI/ImGui/ImGuiPlatform.h"
@@ -12,9 +13,7 @@ namespace Cyclone
 
 C_STATUS ImGUIModule::OnRegister()
 {
-#ifdef _DEBUG
-    printf("Module: ImGUIModule registered\n");
-#endif
+    LOG_INFO("Module: ImGUIModule registered");
 
     CASSERT(GEngineGetCurrentUISubsystem() == nullptr);
 
@@ -29,9 +28,7 @@ C_STATUS ImGUIModule::OnRegister()
 
 C_STATUS ImGUIModule::OnUnRegister()
 {
-#ifdef _DEBUG
-    printf("Module: ImGUIModule unregistered\n");
-#endif
+    LOG_INFO("Module: ImGUIModule unregistered");
 
     Cyclone::GEngineSetCurrentUISubsystem(nullptr);
 
